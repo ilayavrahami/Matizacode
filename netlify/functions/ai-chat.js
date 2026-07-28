@@ -67,6 +67,7 @@ exports.handler = async (event) => {
 
     if (!resp.ok) {
       const errText = await resp.text();
+      console.error('OpenRouter error', resp.status, errText.slice(0, 500));
       return jsonResponse(502, { error: 'שגיאה מול שירות ה-AI: ' + errText.slice(0, 200) });
     }
 
@@ -76,6 +77,7 @@ exports.handler = async (event) => {
 
     return jsonResponse(200, { reply });
   } catch (err) {
+    console.error('ai-chat handler error', err);
     return jsonResponse(err.statusCode || 500, { error: err.message });
   }
 };

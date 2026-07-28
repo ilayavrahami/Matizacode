@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מציה — השיעורים שלי</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="display">🎮 מציה</span>
+    <a href="#" class="logout-link" onclick="logout()">התנתקות</a>
+  </div>
+
+  <div class="wrap">
+    <div class="bubble-row">
+      <div class="bubble" id="greeting">היייי! מוכנים להמשיך?</div>
+      <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
+    </div>
+
+    <h2 class="display" style="color:var(--yellow);">השיעורים שלי</h2>
+    <div id="lesson-list">טוען שיעורים... ⏳</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

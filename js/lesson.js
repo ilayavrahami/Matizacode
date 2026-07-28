@@ -1,0 +1,294 @@
+const params = new URLSearchParams(window.location.search);
+const lessonId = params.get('id');
+let currentUser = null;
+let lesson = null;
+let frameIndex = 0;
+let taskChecked = {};
+let codeSolved = {};
+
+// --- מעקב זמן למידה (לדוח של ההורים) ---
+let lessonStartTime = Date.now();
+let timeFlushed = false;
+
+async function flushTimeSpent() {
+  if (timeFlushed || !currentUser) return;
+  const minutes = (Date.now() - lessonStartTime) / 60000;
+  if (minutes < 0.05) return; // פחות מ-3 שניות, לא שווה לשמור
+  timeFlushed = true;
+  try {
+    await db.collection('users').doc(currentUser.uid).set({
+      totalTimeMinutes: firebase.firestore.FieldValue.increment(minutes),
+      lastActive: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (e) { /* לא קריטי אם זה נכשל */ }
+}
+window.addEventListener('beforeunload', flushTimeSpent);
+window.addEventListener('pagehide', flushTimeSpent);
+
+requireAuth(async (user) => {
+  currentUser = user;
+  if (!lessonId) { window.location.href = 'dashboard.html'; return; }
+
+  const doc = await db.collection('lessons').doc(lessonId).get();
+  if (!doc.exists) {
+    document.getElementById('stage').innerHTML = '<p style="text-align:center;">השיעור הזה לא נמצא 😕</p>';
+    return;
+  }
+  lesson = doc.data();
+  document.getElementById('lesson-title-top').textContent = lesson.title;
+  document.getElementById('nav-row').style.display = 'flex';
+  renderFrame();
+  initChatWidget();
+});
+
+function updateCurrentPosition() {
+  if (!currentUser) return;
+  db.collection('users').doc(currentUser.uid).set({
+    currentLesson: { id: lessonId, title: lesson.title, frameIndex, totalFrames: (lesson.frames || []).length },
+    lastActive: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).catch(() => {});
+}
+
+function renderFrame() {
+  const frames = lesson.frames || [];
+  const frame = frames[frameIndex];
+  const stage = document.getElementById('stage');
+  const pct = frames.length ? Math.round(((frameIndex + 1) / frames.length) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  updateCurrentPosition();
+
+  const imgBlock = frame.image
+    ? `<img src="${frame.image}" alt="">${frame.highlight ? `<span class="click-marker" style="left:${frame.highlight.x}%; top:${frame.highlight.y}%;"></span>` : ''}`
+    : `<span class="frame-placeholder">🎨</span>`;
+
+  const taskBlock = frame.task ? `
+    <label class="task-box">
+      <input type="checkbox" id="task-check" ${taskChecked[frameIndex] ? 'checked' : ''}>
+      <span>${frame.task}</span>
+    </label>` : '';
+
+  const codeBlock = frame.type === 'code' ? `
+    <div class="code-terminal">
+      <div class="code-terminal-bar">🖥️ הטרמינל שלי</div>
+      <textarea class="code-input" id="code-input" spellcheck="false">${frame.starterCode || ''}</textarea>
+      <button class="btn yellow btn-block" id="run-code-btn" type="button">▶️ הרצה</button>
+      <div class="code-output" id="code-output">${codeSolved[frameIndex] ? codeOutputSuccessHTML(codeSolved[frameIndex]) : ''}</div>
+    </div>` : '';
+
+  stage.innerHTML = `
+    ${frame.image || frame.type !== 'code' ? `<div class="frame-img-wrap">${imgBlock}</div>` : ''}
+    <div class="bubble-row">
+      <div class="bubble">${frame.text}</div>
+      <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
+    </div>
+    ${taskBlock}
+    ${codeBlock}
+  `;
+
+  if (frame.task) {
+    document.getElementById('task-check').addEventListener('change', (e) => {
+      taskChecked[frameIndex] = e.target.checked;
+    });
+  }
+
+  if (frame.type === 'code') {
+    document.getElementById('run-code-btn').addEventListener('click', () => runCode(frame));
+  }
+
+  document.getElementById('prev-btn').disabled = frameIndex === 0;
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.textContent = (frameIndex === frames.length - 1) ? 'סיימתי! 🏆' : 'הבא ⟶';
+  nextBtn.disabled = frame.type === 'code' && !codeSolved[frameIndex];
+}
+
+function codeOutputSuccessHTML(printed) {
+  return `<div class="code-line ok">&gt;&gt;&gt; ${printed}</div><div class="code-msg ok">מעולה! זה בדיוק נכון ✅</div>`;
+}
+
+function runCode(frame) {
+  const code = document.getElementById('code-input').value;
+  const output = document.getElementById('code-output');
+  const match = code.match(/print\s*\(\s*(["'])([\s\S]*?)\1\s*\)/);
+
+  if (!match) {
+    output.innerHTML = `<div class="code-msg err">לא מצאתי כאן print("...") — נסו לכתוב את זה בדיוק ככה 🧐</div>`;
+    return;
+  }
+
+  const printed = match[2];
+  if (printed.trim() === (frame.expectedPrint || '').trim()) {
+    output.innerHTML = codeOutputSuccessHTML(printed);
+    codeSolved[frameIndex] = printed;
+    document.getElementById('next-btn').disabled = false;
+    fireConfetti(24);
+    playChime('success');
+  } else {
+    output.innerHTML = `<div class="code-line">&gt;&gt;&gt; ${printed}</div><div class="code-msg err">כמעט! זה הדפיס "${printed}" ולא "${frame.expectedPrint}". בדקו מה כתוב בתוך המרכאות ונסו שוב 💪</div>`;
+  }
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  if (frameIndex > 0) { frameIndex--; renderFrame(); }
+});
+
+document.getElementById('next-btn').addEventListener('click', async () => {
+  const frames = lesson.frames || [];
+  if (frameIndex < frames.length - 1) {
+    frameIndex++;
+    renderFrame();
+  } else {
+    // last frame — mark lesson complete and show the celebration screen
+    const topics = lesson.topics || [];
+    await db.collection('users').doc(currentUser.uid).set({
+      progress: { [lessonId]: { done: true, completedAt: firebase.firestore.FieldValue.serverTimestamp() } },
+      topics: firebase.firestore.FieldValue.arrayUnion(...topics),
+      currentLesson: firebase.firestore.FieldValue.delete(),
+      lastActive: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    await flushTimeSpent();
+    showCompletionScreen();
+  }
+});
+
+async function showCompletionScreen() {
+  document.getElementById('nav-row').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '100%';
+
+  let nextLessonId = null;
+  if (typeof lesson.order === 'number') {
+    const nextSnap = await db.collection('lessons').where('order', '==', lesson.order + 1).limit(1).get();
+    if (!nextSnap.empty) nextLessonId = nextSnap.docs[0].id;
+  }
+
+  document.getElementById('stage').innerHTML = `
+    <div style="text-align:center;">
+      <img src="assets/maccia-mascot.svg" class="mascot" alt="מציה">
+      <h2 class="display" style="color:var(--yellow);">כל הכבוד! 🏆</h2>
+      <p class="bubble" style="display:inline-block;">סיימת את "${lesson.title}"!</p>
+      <div style="display:flex; gap:12px; margin-top:24px;">
+        <a href="dashboard.html" class="btn secondary" style="flex:1;">לשיעורים</a>
+        ${nextLessonId ? `<a href="lesson.html?id=${nextLessonId}" class="btn" style="flex:1;">לשיעור הבא ⟶</a>` : ''}
+      </div>
+    </div>`;
+  fireConfetti();
+  playChime('victory');
+}
+
+function fireConfetti(count = 90) {
+  const colors = ['#2EE6D0', '#FFE156', '#B14EFF', '#4A7CFF', '#FF8FB1'];
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+    piece.style.animationDelay = (Math.random() * 0.4) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// ===== צלילים (Web Audio API — בלי קבצי אודיו חיצוניים) =====
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playNote(freq, startTime, duration, gainPeak = 0.18) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.05);
+}
+
+function playChime(kind) {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const melody = kind === 'victory'
+      ? [523.25, 659.25, 783.99, 1046.50]   // C5 E5 G5 C6 — ניצחון גדול
+      : [659.25, 987.77];                    // E5 B5 — משימה קטנה הושלמה
+    melody.forEach((freq, i) => playNote(freq, now + i * 0.13, 0.35));
+  } catch (e) { /* Web Audio לא נתמך/חסום — לא קריטי */ }
+}
+
+// ===== צ'אט עזרה של מציה (AI Companion) =====
+function initChatWidget() {
+  const shell = document.querySelector('.frame-shell');
+  const widget = document.createElement('div');
+  widget.className = 'chat-widget';
+  widget.innerHTML = `
+    <button class="chat-fab" id="chat-fab" type="button" aria-label="שאלו את מציה">💬</button>
+    <div class="chat-panel" id="chat-panel" style="display:none;">
+      <div class="chat-panel-head">
+        <span>💬 שאלו את מציה</span>
+        <button id="chat-close" type="button" aria-label="סגירה">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg bot">היי! יש לך שאלה על השיעור? אני כאן 😊</div>
+      </div>
+      <div class="chat-input-row">
+        <input id="chat-input" class="field" placeholder="כתבו כאן..." maxlength="400">
+        <button id="chat-send" class="btn" type="button">שלח</button>
+      </div>
+    </div>`;
+  shell.appendChild(widget);
+
+  const panel = document.getElementById('chat-panel');
+  document.getElementById('chat-fab').addEventListener('click', () => {
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  });
+  document.getElementById('chat-close').addEventListener('click', () => {
+    panel.style.display = 'none';
+  });
+
+  const sendBtn = document.getElementById('chat-send');
+  const input = document.getElementById('chat-input');
+  const send = () => sendChatMessage(input, sendBtn);
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+}
+
+function appendChatMessage(text, who) {
+  const box = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = 'chat-msg ' + who;
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
+}
+
+async function sendChatMessage(input, sendBtn) {
+  const text = input.value.trim();
+  if (!text || !currentUser) return;
+  input.value = '';
+  sendBtn.disabled = true;
+  appendChatMessage(text, 'me');
+  const thinking = appendChatMessage('מציה חושבת... 🤔', 'bot');
+
+  try {
+    const idToken = await currentUser.getIdToken();
+    const resp = await fetch('/.netlify/functions/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({ message: text, lessonTitle: lesson ? lesson.title : '' })
+    });
+    const data = await resp.json();
+    thinking.textContent = resp.ok ? data.reply : 'אופס, הייתה בעיה קטנה... נסו שוב עוד רגע 😅';
+  } catch (e) {
+    thinking.textContent = 'אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅';
+  } finally {
+    sendBtn.disabled = false;
+  }
+}

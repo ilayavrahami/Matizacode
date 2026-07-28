@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מציה — דוח להורים</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="display" style="font-size:1.2rem;">👪 דוח התקדמות — מציה</span>
+  </div>
+
+  <div class="wrap" style="max-width: 560px;">
+
+    <div class="card" id="pin-card">
+      <h2 style="margin-top:0;">כניסת הורים</h2>
+      <p style="color:var(--text-dim); font-size:.9rem;">
+        הזינו את שם המשתמש של הילד/ה ואת קוד ה-PIN שקיבלתם מהמורה.
+      </p>
+      <input class="field" id="pin-username" placeholder="שם משתמש של הילד/ה">
+      <input class="field" id="pin-code" placeholder="קוד PIN (6 ספרות)" inputmode="numeric" maxlength="6">
+      <div class="error-msg" id="pin-error"></div>
+      <button class="btn btn-block" id="pin-submit" style="margin-top:14px;">צפייה בדוח 🔍</button>
+    </div>
+
+    <div id="report-card" style="display:none;">
+      <div class="card">
+        <h2 style="margin-top:0; color:var(--yellow);" id="report-name"></h2>
+        <div class="parent-stat-grid">
+          <div class="parent-stat">
+            <div class="num" id="stat-completed">–</div>
+            <div class="label">שיעורים הושלמו</div>
+          </div>
+          <div class="parent-stat">
+            <div class="num" id="stat-time">–</div>
+            <div class="label">זמן למידה</div>
+          </div>
+          <div class="parent-stat">
+            <div class="num" id="stat-last">–</div>
+            <div class="label">פעילות אחרונה</div>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom:6px;">🏅 נושאים שנרכשו</h3>
+        <div id="topics-list"></div>
+
+        <h3>📚 השיעורים</h3>
+        <div id="lessons-list"></div>
+
+        <div class="encourage-box">
+          <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה" style="margin:0;">
+          <p style="margin:0;" id="encourage-text"></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/parent-dashboard.js"></script>
+</body>
+</html>

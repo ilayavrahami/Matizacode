@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מציה — כלי מיקום לעיגול הצהוב</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  #drop-zone {
+    border: 3px dashed var(--bg-panel-2);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  #drop-zone.hover { border-color: var(--turquoise); }
+  #pic-wrap { position: relative; display: inline-block; max-width: 100%; }
+  #pic-wrap img { max-width: 100%; display: block; border-radius: 12px; }
+  #marker {
+    position: absolute; width: 44px; height: 44px;
+    border: 5px solid var(--yellow); border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; display: none;
+  }
+  #result {
+    margin-top: 18px; background: var(--bg-panel);
+    border-radius: 14px; padding: 16px; font-family: monospace;
+    font-size: 1rem; direction: ltr; text-align: left; user-select: all;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="display" style="color:var(--yellow);">🎯 כלי מיקום לעיגול הצהוב</h1>
+    <p style="color:var(--text-dim);">
+      בוחרים תמונה של שיעור, לוחצים בדיוק על המקום שרוצים שהעיגול יהיה עליו,
+      ומעתיקים את השורה שמופיעה למטה לתוך <code>lessons-data.js</code>.
+    </p>
+
+    <div id="drop-zone">
+      <input type="file" id="file-input" accept="image/*" style="display:none;">
+      <span>📁 לחצו כאן ובחרו תמונה</span>
+    </div>
+
+    <div id="pic-wrap" style="display:none;">
+      <img id="pic" src="" alt="">
+      <div id="marker"></div>
+    </div>
+
+    <div id="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const picWrap = document.getElementById('pic-wrap');
+    const pic = document.getElementById('pic');
+    const marker = document.getElementById('marker');
+    const result = document.getElementById('result');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      pic.src = URL.createObjectURL(file);
+      picWrap.style.display = 'inline-block';
+    });
+
+    pic.addEventListener('click', (e) => {
+      const rect = pic.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      marker.style.left = x + '%';
+      marker.style.top = y + '%';
+      marker.style.display = 'block';
+
+      result.style.display = 'block';
+      result.textContent = `highlight: { x: ${x.toFixed(1)}, y: ${y.toFixed(1)} }`;
+    });
+  </script>
+</body>
+</html>

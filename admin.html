@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מציה — ניהול</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="display" style="font-size:1.2rem;">🛠️ ניהול — מציה</span>
+    <a href="dashboard.html" class="logout-link">→ לאתר</a>
+  </div>
+
+  <div class="wrap" id="admin-wrap" style="display:none;">
+
+    <div class="card admin-section">
+      <h2>➕ יצירת משתמש חדש</h2>
+      <input class="field" id="new-username" placeholder="שם משתמש (אנגלית, בלי רווחים)">
+      <input class="field" id="new-displayname" placeholder="שם הילד/ה להצגה">
+      <input class="field" id="new-password" type="text" placeholder="סיסמה">
+      <button class="btn" id="create-user-btn" style="margin-top:14px;">צור משתמש</button>
+      <div class="success-msg" id="create-msg"></div>
+    </div>
+
+    <div class="card admin-section">
+      <h2>👥 משתמשים קיימים</h2>
+      <div class="progress-table-wrap" id="users-list">טוען...</div>
+    </div>
+
+    <div class="card admin-section">
+      <h2>📈 התקדמות תלמידים</h2>
+      <div class="progress-table-wrap" id="progress-list">טוען...</div>
+    </div>
+
+    <div class="card admin-section">
+      <h2>📚 שיעורים</h2>
+      <p style="color:var(--text-dim); font-size:.9rem;">
+        טוען את שיעור 1 לדוגמה מתוך js/lessons-data.js. כדי להוסיף עוד שיעורים —
+        ערוך את הקובץ הזה או הוסף ישירות ב-Firestore Console.
+      </p>
+      <button class="btn yellow" id="load-lessons-btn">טען שיעורים לדאטהבייס</button>
+      <div class="success-msg" id="lessons-msg"></div>
+    </div>
+
+  </div>
+
+  <div class="wrap" id="denied-wrap" style="display:none;">
+    <p>הדף הזה מיועד למנהלים בלבד 🔒</p>
+  </div>
+
+  <!-- מודל: איפוס סיסמה -->
+  <div class="modal-overlay" id="reset-modal" style="display:none;">
+    <div class="card modal-card">
+      <h3>איפוס סיסמה</h3>
+      <p style="color:var(--text-dim); font-size:.88rem;" id="reset-modal-name"></p>
+      <input class="field" id="reset-new-password" type="text" placeholder="סיסמה חדשה (לפחות 6 תווים)">
+      <div class="error-msg" id="reset-modal-error"></div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button class="btn secondary" id="reset-modal-cancel" style="flex:1;">ביטול</button>
+        <button class="btn" id="reset-modal-confirm" style="flex:1;">אפס סיסמה</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל: מחיקת משתמש -->
+  <div class="modal-overlay" id="delete-modal" style="display:none;">
+    <div class="card modal-card">
+      <h3>מחיקת משתמש</h3>
+      <p id="delete-modal-name"></p>
+      <p style="color:var(--danger); font-size:.85rem;">פעולה זו לא הפיכה — כל ההתקדמות תימחק.</p>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button class="btn secondary" id="delete-modal-cancel" style="flex:1;">ביטול</button>
+        <button class="btn" id="delete-modal-confirm" style="flex:1; background:var(--danger); box-shadow:0 4px 0 #c23a55;">מחק משתמש</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל: קוד PIN להורה -->
+  <div class="modal-overlay" id="pin-modal" style="display:none;">
+    <div class="card modal-card">
+      <h3>קוד PIN להורה</h3>
+      <p style="color:var(--text-dim); font-size:.88rem;" id="pin-modal-name"></p>
+      <div class="bubble" id="pin-modal-code" style="text-align:center; font-size:1.6rem; letter-spacing:4px;"></div>
+      <p style="color:var(--text-dim); font-size:.85rem; margin-top:12px;">
+        שלחו להורה את הקישור + הקוד: דף "דוח להורים" באתר, שם משתמש הילד/ה, והקוד הזה.
+      </p>
+      <button class="btn secondary btn-block" id="pin-modal-close" style="margin-top:10px;">סגירה</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/lessons-data.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

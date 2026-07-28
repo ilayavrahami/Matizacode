@@ -1,5 +1,5 @@
 // פרוקסי בטוח לצ'אט העזרה של מציה.
-// דורש משתנה סביבה GEMINI_API_KEY ב-Netlify (מפתח מ-https://aistudio.google.com/apikey).
+// דורש משתנה סביבה OPENAI_API_KEY ב-Netlify (מפתח מ-https://platform.openai.com/api-keys).
 // המפתח נשאר בצד השרת בלבד — לעולם לא נשלח לדפדפן.
 
 const { getAdmin, jsonResponse } = require('./_firebase-admin');
@@ -35,23 +35,27 @@ exports.handler = async (event) => {
       return jsonResponse(400, { error: 'הודעה לא תקינה' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return jsonResponse(500, { error: 'חסר משתנה סביבה GEMINI_API_KEY' });
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return jsonResponse(500, { error: 'חסר משתנה סביבה OPENAI_API_KEY' });
 
     const contextLine = lessonTitle ? `\n\nהילד/ה כרגע בשיעור: "${lessonTitle}".` : '';
 
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT + contextLine }] },
-          contents: [{ role: 'user', parts: [{ text: message }] }],
-          generationConfig: { maxOutputTokens: 200, temperature: 0.7 }
-        })
-      }
-    );
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT + contextLine },
+          { role: 'user', content: message }
+        ],
+        max_tokens: 200,
+        temperature: 0.7
+      })
+    });
 
     if (!resp.ok) {
       const errText = await resp.text();
@@ -59,7 +63,7 @@ exports.handler = async (event) => {
     }
 
     const data = await resp.json();
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text
+    const reply = data?.choices?.[0]?.message?.content?.trim()
       || 'אופס, לא הצלחתי לחשוב על תשובה עכשיו... נסו שוב? 😊';
 
     return jsonResponse(200, { reply });

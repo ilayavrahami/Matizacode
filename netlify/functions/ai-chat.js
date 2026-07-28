@@ -1,8 +1,8 @@
-// פרוקסי בטוח לצ'אט העזרה של מציה.
-// דורש משתנה סביבה OPENAI_API_KEY ב-Netlify (מפתח מ-https://platform.openai.com/api-keys).
+// פרוקסי בטוח לצ'אט העזרה של מציה — דרך OpenRouter, עם המודל החינמי של DeepSeek.
+// דורש משתנה סביבה OPENROUTER_API_KEY ב-Netlify (מפתח מ-https://openrouter.ai/keys).
 // המפתח נשאר בצד השרת בלבד — לעולם לא נשלח לדפדפן.
 
-const { getAdmin, jsonResponse } = require('./_firebase-admin');
+const { getAdmin, jsonResponse, CORS_HEADERS } = require('./_firebase-admin');
 
 const SYSTEM_PROMPT = `את מציה, עוזרת לימודית חמודה, מעודדת וסבלנית לילדים שלומדים
 תכנות ובניית משחקים (Python, VS Code, Pygame).
@@ -19,6 +19,11 @@ const SYSTEM_PROMPT = `את מציה, עוזרת לימודית חמודה, מע
   קטן אחד שעוזר להם להגיע לפתרון בעצמם.`;
 
 exports.handler = async (event) => {
+  // בקשת preflight של CORS — הדפדפן שולח את זה אוטומטית לפני בקשת POST
+  // שכוללת כותרת Authorization מותאמת אישית. חייבים לענות עליה 200 ריק.
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: CORS_HEADERS, body: '' };
+  }
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed' });
   }
@@ -35,19 +40,22 @@ exports.handler = async (event) => {
       return jsonResponse(400, { error: 'הודעה לא תקינה' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return jsonResponse(500, { error: 'חסר משתנה סביבה OPENAI_API_KEY' });
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) return jsonResponse(500, { error: 'חסר משתנה סביבה OPENROUTER_API_KEY' });
 
     const contextLine = lessonTitle ? `\n\nהילד/ה כרגע בשיעור: "${lessonTitle}".` : '';
 
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
+        'Authorization': 'Bearer ' + apiKey,
+        // OpenRouter מבקש כותרות זיהוי אלה (לא חובה, אבל מומלץ ומשפר עדיפות בתור החינמי)
+        'HTTP-Referer': 'matiziacode.netlify.app',
+        'X-Title': 'Matzia'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'deepseek/deepseek-chat:free', // חלופה: 'deepseek/deepseek-r1:free' (מודל חשיבה, איטי יותר)
         messages: [
           { role: 'system', content: SYSTEM_PROMPT + contextLine },
           { role: 'user', content: message }

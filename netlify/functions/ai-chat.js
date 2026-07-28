@@ -1,4 +1,5 @@
-// פרוקסי בטוח לצ'אט העזרה של מציה — דרך OpenRouter, עם המודל החינמי של DeepSeek.
+// פרוקסי בטוח לצ'אט העזרה של מציה — דרך OpenRouter, עם ה-auto-router החינמי
+// (openrouter/free) שבוחר לבד מודל חינמי זמין.
 // דורש משתנה סביבה OPENROUTER_API_KEY ב-Netlify (מפתח מ-https://openrouter.ai/keys).
 // המפתח נשאר בצד השרת בלבד — לעולם לא נשלח לדפדפן.
 
@@ -55,7 +56,12 @@ exports.handler = async (event) => {
         'X-Title': 'Matzia'
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-chat:free', // חלופה: 'deepseek/deepseek-r1:free' (מודל חשיבה, איטי יותר)
+        // DeepSeek הפסיקה להציע מודלים חינמיים ב-OpenRouter (נכון ליולי 2026).
+        // "openrouter/free" הוא ה-auto-router הרשמי של OpenRouter — הוא בוחר
+        // אוטומטית מודל חינמי זמין, כך שהצ'אט ימשיך לעבוד גם כשספקים מחליפים
+        // את היצע המודלים החינמיים שלהם. אם תרצו לקבע מודל ספציפי במקום,
+        // חלופה יציבה נכון להיום: 'meta-llama/llama-3.3-70b-instruct:free'.
+        model: 'openrouter/free',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT + contextLine },
           { role: 'user', content: message }

@@ -157,10 +157,11 @@
 
 ### שלב 4 — מפתח AI (בשביל צ'אט העזרה של מציה)
 
-1. גשו ל-https://aistudio.google.com/apikey (חינמי, עם חשבון Gmail) וצרו
-   מפתח API של Gemini.
+1. גשו ל-https://platform.openai.com/api-keys וצרו מפתח API של OpenAI
+   (מתחיל ב-`sk-proj...` או `sk-...`). שימו לב — זה דורש חשבון עם אמצעי
+   תשלום מחובר אצל OpenAI, בניגוד ל-Firebase שהוא בחינם.
 2. ב-Netlify → Environment variables → Add a variable:
-   - Key: `GEMINI_API_KEY`
+   - Key: `OPENAI_API_KEY`
    - Value: המפתח שקיבלתם.
 3. Deploy מחדש.
 

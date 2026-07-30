@@ -17,7 +17,7 @@ requireAuth(async (user) => {
   document.getElementById('greeting').textContent =
     name ? `היייי ${name}! מוכנים להמשיך? 😄` : 'היייי! מוכנים להמשיך? 😄';
 
-  document.getElementById('coin-pill').textContent = `🪙 ${userData.coins || 0}`;
+  document.getElementById('coin-pill').textContent = userData.isAdmin ? '🪙 ∞' : `🪙 ${userData.coins || 0}`;
   document.getElementById('avatar-preview').innerHTML = renderAvatarHTML(userData.avatar, 100);
 
   const snap = await db.collection('lessons').orderBy('order').get();

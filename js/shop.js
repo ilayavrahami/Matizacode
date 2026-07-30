@@ -19,7 +19,7 @@ requireAuth(async (user) => {
 });
 
 function renderAll() {
-  document.getElementById('coin-pill').textContent = `🪙 ${userData.coins || 0}`;
+  document.getElementById('coin-pill').textContent = userData.isAdmin ? '🪙 ∞' : `🪙 ${userData.coins || 0}`;
   document.getElementById('avatar-preview').innerHTML = renderAvatarHTML(userData.avatar, 140);
   renderGrid();
 }
@@ -34,7 +34,7 @@ function renderGrid() {
   grid.innerHTML = items.map((item) => {
     const owned = !!inventory[item.id];
     const equipped = avatar[item.category] === item.id;
-    const canAfford = (userData.coins || 0) >= item.price;
+    const canAfford = userData.isAdmin || (userData.coins || 0) >= item.price;
 
     const preview = item.category === 'background'
       ? `<div class="shop-item-swatch" style="background:${item.css};"></div>`
@@ -54,7 +54,7 @@ function renderGrid() {
         ${preview}
         <span class="rarity-badge" style="background:${RARITY_COLORS[item.rarity]}22; color:${RARITY_COLORS[item.rarity]};">${RARITY_LABELS[item.rarity]}</span>
         <p class="shop-item-name">${item.name}</p>
-        ${owned ? '' : `<p class="shop-item-price">🪙 ${item.price}</p>`}
+        ${owned ? '' : `<p class="shop-item-price">${userData.isAdmin ? 'חינם למנהל 🪄' : `🪙 ${item.price}`}</p>`}
         ${actionBtn}
       </div>`;
   }).join('');
@@ -77,13 +77,13 @@ async function buyItem(itemId) {
       const inventory = u.inventory || {};
 
       if (inventory[itemId]) return; // כבר בבעלות, לא לחייב שוב
-      if (coins < item.price) throw new Error('אין מספיק מטבעות');
+      if (!u.isAdmin && coins < item.price) throw new Error('אין מספיק מטבעות');
 
       inventory[itemId] = true;
       const avatar = u.avatar || {};
       avatar[item.category] = itemId; // לובשים אוטומטית מיד אחרי הקנייה
 
-      tx.set(ref, { coins: coins - item.price, inventory, avatar }, { merge: true });
+      tx.set(ref, { coins: u.isAdmin ? coins : coins - item.price, inventory, avatar }, { merge: true });
     });
 
     const doc = await db.collection('users').doc(currentUser.uid).get();

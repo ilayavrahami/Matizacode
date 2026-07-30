@@ -1,3 +1,10 @@
+// חלוקת השיעורים ל"עולמות" נושאיים למפה. מבוסס על טווח order של השיעור.
+// כשמוסיפים עוד שיעורים בעתיד — פשוט מוסיפים עולם נוסף לרשימה הזו.
+const WORLDS = [
+  { emoji: "🏝️", title: "אי ההתחלה", minOrder: 1, maxOrder: 4 },
+  { emoji: "⛰️", title: "הר ה-Pygame", minOrder: 5, maxOrder: 8 }
+];
+
 requireAuth(async (user) => {
   const allowed = await enforceTimeLimits(user.uid);
   if (!allowed) return;
@@ -10,37 +17,51 @@ requireAuth(async (user) => {
   document.getElementById('greeting').textContent =
     name ? `היייי ${name}! מוכנים להמשיך? 😄` : 'היייי! מוכנים להמשיך? 😄';
 
+  document.getElementById('coin-pill').textContent = `🪙 ${userData.coins || 0}`;
+  document.getElementById('avatar-preview').innerHTML = renderAvatarHTML(userData.avatar, 100);
+
   const snap = await db.collection('lessons').orderBy('order').get();
-  const listEl = document.getElementById('lesson-list');
+  const containerEl = document.getElementById('map-container');
 
   if (snap.empty) {
-    listEl.innerHTML = '<p style="color:var(--text-dim)">עוד אין שיעורים כאן... בקרוב! 🚀</p>';
+    containerEl.innerHTML = '<p style="color:var(--text-dim)">עוד אין שיעורים כאן... בקרוב! 🚀</p>';
     return;
   }
 
-  let html = '';
+  const lessons = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   let previousDone = true; // lesson 1 is always unlocked
 
-  snap.forEach((doc) => {
-    const lesson = doc.data();
-    const done = !!progress[doc.id];
-    const unlocked = previousDone;
-    const classes = ['lesson-item'];
-    if (done) classes.push('done');
-    if (!unlocked) classes.push('locked');
+  const worldsHtml = WORLDS.map((world) => {
+    const worldLessons = lessons.filter((l) => l.order >= world.minOrder && l.order <= world.maxOrder);
+    if (!worldLessons.length) return '';
 
-    html += `
-      <a class="${classes.join(' ')}" href="lesson.html?id=${doc.id}">
-        <div class="lesson-num">${lesson.order}</div>
-        <div>
-          <p class="lesson-title">${lesson.title}</p>
-          <p class="lesson-sub">${lesson.subtitle || ''}</p>
+    const nodesHtml = worldLessons.map((lesson) => {
+      const done = !!progress[lesson.id];
+      const unlocked = previousDone;
+      const classes = ['map-node'];
+      if (done) classes.push('done');
+      if (!unlocked) classes.push('locked');
+      previousDone = done;
+
+      return `
+        <a class="${classes.join(' ')}" href="lesson.html?id=${lesson.id}">
+          <div class="map-node-circle">${done ? '✅' : (unlocked ? lesson.order : '🔒')}</div>
+          <div class="map-node-info">
+            <p class="map-node-title">${lesson.title}</p>
+            <p class="map-node-sub">${lesson.subtitle || ''}</p>
+          </div>
+        </a>`;
+    }).join('');
+
+    return `
+      <div class="world-block">
+        <div class="world-header">
+          <span class="world-emoji">${world.emoji}</span>
+          <h3>${world.title}</h3>
         </div>
-        <div class="check">${done ? '✅' : (unlocked ? '' : '🔒')}</div>
-      </a>`;
+        <div class="map-path">${nodesHtml}</div>
+      </div>`;
+  }).join('');
 
-    previousDone = done;
-  });
-
-  listEl.innerHTML = html;
+  containerEl.innerHTML = worldsHtml || '<p style="color:var(--text-dim)">עוד אין שיעורים כאן... בקרוב! 🚀</p>';
 });

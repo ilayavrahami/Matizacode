@@ -157,6 +157,8 @@ function runCode(frame) {
     document.getElementById('next-btn').disabled = false;
     fireConfetti(24);
     playChime('success');
+    awardCoinsOnce(currentUser.uid, `exercise:${lessonId}:${frameIndex}`, COINS_PER_EXERCISE)
+      .then((awarded) => { if (awarded) showCoinToast(COINS_PER_EXERCISE); });
   } else {
     output.innerHTML = `<div class="code-line">&gt;&gt;&gt; ${bidiSafe(printed)}</div><div class="code-msg err">${bidiSafe(`כמעט! זה הדפיס "${printed}" ולא "${frame.expectedPrint}". בדקו מה כתוב בתוך המרכאות ונסו שוב 💪`)}</div>`;
   }
@@ -204,6 +206,8 @@ async function runPygameCheck(frame) {
       document.getElementById('next-btn').disabled = false;
       fireConfetti(24);
       playChime('success');
+      awardCoinsOnce(currentUser.uid, `exercise:${lessonId}:${frameIndex}`, COINS_PER_EXERCISE)
+        .then((awarded) => { if (awarded) showCoinToast(COINS_PER_EXERCISE); });
     } else {
       output.innerHTML = `<div class="code-msg err">${bidiSafe(data.feedback)}</div>`;
     }
@@ -235,11 +239,12 @@ document.getElementById('next-btn').addEventListener('click', async () => {
       lastActive: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     await flushTimeSpent();
-    showCompletionScreen();
+    const earnedCoins = await awardCoinsOnce(currentUser.uid, `lesson:${lessonId}`, COINS_PER_LESSON);
+    showCompletionScreen(earnedCoins);
   }
 });
 
-async function showCompletionScreen() {
+async function showCompletionScreen(earnedCoins) {
   document.getElementById('nav-row').style.display = 'none';
   document.getElementById('progress-fill').style.width = '100%';
 
@@ -254,6 +259,7 @@ async function showCompletionScreen() {
       <img src="assets/maccia-mascot.svg" class="mascot" alt="מציה">
       <h2 class="display" style="color:var(--yellow);">כל הכבוד! 🏆</h2>
       <p class="bubble" style="display:inline-block;">סיימת את "${bidiSafe(lesson.title)}"!</p>
+      ${earnedCoins ? `<p style="color:var(--yellow); font-weight:800; margin-top:10px;">קיבלת ${COINS_PER_LESSON} מטבעות 🪙</p>` : ''}
       <div style="display:flex; gap:12px; margin-top:24px;">
         <a href="dashboard.html" class="btn secondary" style="flex:1;">לשיעורים</a>
         ${nextLessonId ? `<a href="lesson.html?id=${nextLessonId}" class="btn" style="flex:1;">לשיעור הבא ⟶</a>` : ''}

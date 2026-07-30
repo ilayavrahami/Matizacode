@@ -9,7 +9,10 @@
 <body>
   <div class="topbar">
     <span class="display">🎮 מציה</span>
-    <a href="#" class="logout-link" onclick="logout()">התנתקות</a>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="coin-pill" id="coin-pill">🪙 0</span>
+      <a href="#" class="logout-link" onclick="logout()">התנתקות</a>
+    </div>
   </div>
 
   <div class="wrap">
@@ -18,8 +21,16 @@
       <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
     </div>
 
-    <h2 class="display" style="color:var(--yellow);">השיעורים שלי</h2>
-    <div id="lesson-list">טוען שיעורים... ⏳</div>
+    <div class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
+      <div id="avatar-preview"></div>
+      <div style="flex:1;">
+        <p style="margin:0 0 6px; font-weight:800;">האווטאר שלי</p>
+        <p style="margin:0 0 12px; color:var(--text-dim); font-size:.85rem;">התלבשו על מציה עם פריטים מהחנות!</p>
+        <a href="shop.html" class="btn yellow" style="font-size:.95rem; padding:10px 20px;">🛍️ לחנות</a>
+      </div>
+    </div>
+
+    <div id="map-container">טוען שיעורים... ⏳</div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -28,6 +39,8 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/time-limits.js"></script>
+  <script src="js/economy.js"></script>
+  <script src="js/shop-data.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

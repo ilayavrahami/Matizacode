@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מציה — חנות האווטאר</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="display">🛍️ חנות האווטאר</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="coin-pill" id="coin-pill">🪙 0</span>
+      <a href="dashboard.html" class="logout-link">→ לשיעורים</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card" style="text-align:center; margin-bottom:24px;">
+      <div id="avatar-preview" style="margin-bottom:10px;"></div>
+      <p style="color:var(--text-dim); font-size:.85rem; margin:0;">ככה מציה שלכם נראית עכשיו!</p>
+    </div>
+
+    <div class="shop-tabs" id="shop-tabs">
+      <button class="shop-tab active" data-category="all">הכל</button>
+      <button class="shop-tab" data-category="hat">🎩 כובעים</button>
+      <button class="shop-tab" data-category="glasses">👓 משקפיים</button>
+      <button class="shop-tab" data-category="background">🎨 רקעים</button>
+      <button class="shop-tab" data-category="effect">✨ אפקטים</button>
+    </div>
+
+    <div class="shop-grid" id="shop-grid">טוען... ⏳</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shop-data.js"></script>
+  <script src="js/shop.js"></script>
+</body>
+</html>

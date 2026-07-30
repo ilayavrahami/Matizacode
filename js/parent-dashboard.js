@@ -2,6 +2,9 @@ const qp = new URLSearchParams(window.location.search);
 const prefillUser = qp.get('u');
 if (prefillUser) document.getElementById('pin-username').value = prefillUser;
 
+let sessionUsername = null;
+let sessionPin = null;
+
 document.getElementById('pin-submit').addEventListener('click', submitPin);
 document.getElementById('pin-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPin(); });
 
@@ -30,6 +33,8 @@ async function submitPin() {
       errorEl.textContent = data.error || 'שגיאה, נסו שוב';
       return;
     }
+    sessionUsername = username;
+    sessionPin = pin;
     renderReport(data);
   } catch (e) {
     errorEl.textContent = 'בעיה בחיבור לאינטרנט, נסו שוב';
@@ -65,4 +70,42 @@ function renderReport(data) {
     </div>`).join('');
 
   document.getElementById('encourage-text').textContent = data.encouragement;
+
+  document.getElementById('limit-daily').value = data.limits && data.limits.dailyMinutes != null ? data.limits.dailyMinutes : '';
+  document.getElementById('limit-weekly').value = data.limits && data.limits.weeklyMinutes != null ? data.limits.weeklyMinutes : '';
 }
+
+document.getElementById('limits-save').addEventListener('click', async () => {
+  const errorEl = document.getElementById('limits-error');
+  const successEl = document.getElementById('limits-success');
+  const btn = document.getElementById('limits-save');
+  errorEl.textContent = '';
+  successEl.textContent = '';
+
+  const dailyRaw = document.getElementById('limit-daily').value.trim();
+  const weeklyRaw = document.getElementById('limit-weekly').value.trim();
+
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/.netlify/functions/parent-set-limits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: sessionUsername,
+        pin: sessionPin,
+        dailyMinutes: dailyRaw === '' ? null : Number(dailyRaw),
+        weeklyMinutes: weeklyRaw === '' ? null : Number(weeklyRaw)
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      errorEl.textContent = data.error || 'שגיאה בשמירה';
+      return;
+    }
+    successEl.textContent = 'ההגבלות נשמרו בהצלחה ✅';
+  } catch (e) {
+    errorEl.textContent = 'בעיה בחיבור לאינטרנט, נסו שוב';
+  } finally {
+    btn.disabled = false;
+  }
+});

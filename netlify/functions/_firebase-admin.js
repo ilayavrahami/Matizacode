@@ -41,12 +41,18 @@ async function requireAdminCaller(event) {
   return { admin: fbAdmin, callerUid: decoded.uid };
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
+
 function jsonResponse(statusCode, body) {
   return {
     statusCode,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     body: JSON.stringify(body)
   };
 }
 
-module.exports = { getAdmin, requireAdminCaller, jsonResponse };
+module.exports = { getAdmin, requireAdminCaller, jsonResponse, CORS_HEADERS };

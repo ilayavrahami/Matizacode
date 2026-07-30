@@ -52,7 +52,7 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + apiKey,
         // OpenRouter מבקש כותרות זיהוי אלה (לא חובה, אבל מומלץ ומשפר עדיפות בתור החינמי)
-        'HTTP-Referer': 'matiziacode.netlify.app',
+        'HTTP-Referer': 'https://matzia-site.netlify.app',
         'X-Title': 'Matzia'
       },
       body: JSON.stringify({

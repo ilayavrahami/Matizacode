@@ -29,7 +29,7 @@ const seedLessons = [
         image: "assets/lessons/lesson-2/frame-2.png" },
       { text: "בשורת התפריט, מחפשים את המילה Downloads ולוחצים עליה.",
         image: "assets/lessons/lesson-2/frame-3.png",
-        highlight: { x: 35.6, y: 21.9 },
+        highlight: { x: 13, y: 23 },
         task: "מצאתי את Downloads ולחצתי עליו ✅" },
       { text: "האתר חכם — הוא מזהה לבד אם אתם על מק או על Windows, ומראה לכם עמוד הורדה מותאם. ככה זה נראה למשל למי שעל מק 🍎:",
         image: "assets/lessons/lesson-2/frame-4.png" },

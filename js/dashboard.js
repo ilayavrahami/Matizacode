@@ -1,4 +1,7 @@
 requireAuth(async (user) => {
+  const allowed = await enforceTimeLimits(user.uid);
+  if (!allowed) return;
+
   const userDoc = await db.collection('users').doc(user.uid).get();
   const userData = userDoc.exists ? userDoc.data() : {};
   const progress = userData.progress || {};

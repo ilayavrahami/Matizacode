@@ -6,7 +6,7 @@ let frameIndex = 0;
 let taskChecked = {};
 let codeSolved = {};
 
-// --- מעקב זמן למידה (לדוח של ההורים) ---
+// --- מעקב זמן למידה (לדוח של ההורים + אכיפת מגבלות זמן) ---
 let lessonStartTime = Date.now();
 let timeFlushed = false;
 
@@ -16,10 +16,7 @@ async function flushTimeSpent() {
   if (minutes < 0.05) return; // פחות מ-3 שניות, לא שווה לשמור
   timeFlushed = true;
   try {
-    await db.collection('users').doc(currentUser.uid).set({
-      totalTimeMinutes: firebase.firestore.FieldValue.increment(minutes),
-      lastActive: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    await recordUsageMinutes(currentUser.uid, minutes);
   } catch (e) { /* לא קריטי אם זה נכשל */ }
 }
 window.addEventListener('beforeunload', flushTimeSpent);
@@ -27,6 +24,9 @@ window.addEventListener('pagehide', flushTimeSpent);
 
 requireAuth(async (user) => {
   currentUser = user;
+  const allowed = await enforceTimeLimits(user.uid);
+  if (!allowed) { document.getElementById('nav-row').style.display = 'none'; return; }
+
   if (!lessonId) { window.location.href = 'dashboard.html'; return; }
 
   const doc = await db.collection('lessons').doc(lessonId).get();
@@ -39,6 +39,7 @@ requireAuth(async (user) => {
   document.getElementById('nav-row').style.display = 'flex';
   renderFrame();
   initChatWidget();
+  initDebugWidget();
 });
 
 function updateCurrentPosition() {
@@ -290,5 +291,68 @@ async function sendChatMessage(input, sendBtn) {
     thinking.textContent = 'אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅';
   } finally {
     sendBtn.disabled = false;
+  }
+}
+
+// ===== עוזר דיבאג (מפענח שגיאות Python) =====
+function initDebugWidget() {
+  const shell = document.querySelector('.frame-shell');
+  const widget = document.createElement('div');
+  widget.className = 'debug-widget';
+  widget.innerHTML = `
+    <button class="chat-fab" id="debug-fab" type="button" aria-label="עוזר דיבאג" style="background:var(--blue); box-shadow:0 4px 0 #2f5bcf, 0 8px 20px rgba(74,124,255,.35);">🐛</button>
+    <div class="chat-panel" id="debug-panel" style="display:none;">
+      <div class="chat-panel-head">
+        <span>🐛 עוזר דיבאג</span>
+        <button id="debug-close" type="button" aria-label="סגירה">✕</button>
+      </div>
+      <div style="padding:12px 14px; display:flex; flex-direction:column; gap:8px;">
+        <p style="margin:0; font-size:.85rem; color:var(--text-dim);">
+          קיבלתם שגיאה ב-VS Code? הדביקו אותה כאן ומציה תסביר בפשטות מה קרה.
+        </p>
+        <textarea id="debug-error-input" class="field" style="margin-top:0; min-height:90px; font-family:'Courier New',monospace; font-size:.85rem; direction:ltr; text-align:left;" placeholder="Traceback (most recent call last): ..."></textarea>
+        <button id="debug-send" class="btn" type="button">פענוח השגיאה</button>
+        <div id="debug-result" class="chat-messages" style="padding:0; max-height:180px;"></div>
+      </div>
+    </div>`;
+  shell.appendChild(widget);
+
+  const panel = document.getElementById('debug-panel');
+  document.getElementById('debug-fab').addEventListener('click', () => {
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  });
+  document.getElementById('debug-close').addEventListener('click', () => {
+    panel.style.display = 'none';
+  });
+  document.getElementById('debug-send').addEventListener('click', sendDebugError);
+}
+
+async function sendDebugError() {
+  const input = document.getElementById('debug-error-input');
+  const btn = document.getElementById('debug-send');
+  const resultBox = document.getElementById('debug-result');
+  const errorMessage = input.value.trim();
+  if (!errorMessage || !currentUser) return;
+
+  btn.disabled = true;
+  resultBox.innerHTML = '';
+  const thinking = document.createElement('div');
+  thinking.className = 'chat-msg bot';
+  thinking.textContent = 'מציה בודקת... 🤔';
+  resultBox.appendChild(thinking);
+
+  try {
+    const idToken = await currentUser.getIdToken();
+    const resp = await fetch('/.netlify/functions/debug-helper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({ errorMessage })
+    });
+    const data = await resp.json();
+    thinking.textContent = resp.ok ? data.explanation : 'אופס, הייתה בעיה קטנה... נסו שוב עוד רגע 😅';
+  } catch (e) {
+    thinking.textContent = 'אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅';
+  } finally {
+    btn.disabled = false;
   }
 }

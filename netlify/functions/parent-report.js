@@ -86,7 +86,8 @@ exports.handler = async (event) => {
       lastActive: fmtDate(u.lastActive),
       topics,
       lessons: lessonRows,
-      encouragement: buildEncouragement(u.displayName, completedCount, topics)
+      encouragement: buildEncouragement(u.displayName, completedCount, topics),
+      limits: u.limits || { dailyMinutes: null, weeklyMinutes: null }
     });
   } catch (err) {
     return jsonResponse(err.statusCode || 500, { error: err.message });

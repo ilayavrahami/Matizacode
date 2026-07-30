@@ -313,6 +313,8 @@ textarea.field { min-height: 160px; font-family: monospace; font-size: .85rem; r
 }
 /* ---- Chat widget (מציה AI companion) ---- */
 .chat-widget { position: fixed; bottom: 18px; left: 18px; z-index: 500; }
+.debug-widget { position: fixed; bottom: 88px; left: 18px; z-index: 500; }
+.debug-widget .chat-panel { bottom: 154px; }
 .chat-fab {
   width: 58px; height: 58px; border-radius: 50%; border: none;
   background: var(--purple); color: var(--text); font-size: 1.5rem;

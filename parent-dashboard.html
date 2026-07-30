@@ -53,6 +53,18 @@
           <p style="margin:0;" id="encourage-text"></p>
         </div>
       </div>
+
+      <div class="card admin-section">
+        <h2>⏱️ הגבלת זמן שימוש</h2>
+        <p style="color:var(--text-dim); font-size:.88rem;">
+          קבעו כמה זמן מותר לילד/ה להשתמש באתר. השאירו ריק = ללא הגבלה.
+        </p>
+        <input class="field" id="limit-daily" type="number" min="0" placeholder="דקות ליום (למשל 30)">
+        <input class="field" id="limit-weekly" type="number" min="0" placeholder="דקות בשבוע (למשל 150)">
+        <div class="error-msg" id="limits-error"></div>
+        <div class="success-msg" id="limits-success"></div>
+        <button class="btn yellow" id="limits-save" style="margin-top:10px;">שמירת הגבלות</button>
+      </div>
     </div>
 
   </div>

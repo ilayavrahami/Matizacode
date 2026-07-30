@@ -141,7 +141,7 @@ a { color: inherit; }
   border-style: solid;
   border-color: var(--text) transparent transparent transparent;
 }
-.bubble { direction: rtl; text-align: right; flex: 1 1 auto; min-width: 0; }
+.bubble { direction: rtl; text-align: right; flex: 1 1 auto; min-width: 0; white-space: pre-wrap; }
 /* direction:ltr here neutralizes the page's rtl so the row always lays out
    as [bubble][mascot] left-to-right, keeping the mascot glued to the bubble
    instead of drifting away under rtl flex reordering */
@@ -337,7 +337,7 @@ textarea.field { min-height: 160px; font-family: monospace; font-size: .85rem; r
   background: none; border: none; color: var(--text-dim); font-size: 1.1rem; cursor: pointer;
 }
 .chat-messages { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-.chat-msg { max-width: 85%; padding: 9px 13px; border-radius: 16px; font-size: .92rem; line-height: 1.4; }
+.chat-msg { max-width: 85%; padding: 9px 13px; border-radius: 16px; font-size: .92rem; line-height: 1.4; white-space: pre-wrap; }
 .chat-msg.bot { background: var(--bg-panel-2); align-self: flex-start; }
 .chat-msg.me { background: var(--turquoise); color: var(--bg-deep); font-weight: 700; align-self: flex-end; }
 .chat-input-row { display: flex; gap: 8px; padding: 10px 12px; border-top: 2px solid var(--bg-panel-2); }

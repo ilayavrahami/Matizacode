@@ -7,6 +7,21 @@ let taskChecked = {};
 let codeSolved = {};
 let pygameSolved = {};
 
+// ===== תמיכה בערבוב עברית/אנגלית (Bidi) =====
+// הדפדפן קובע איך למקם סימנים "נייטרליים" (כמו סוגריים, נקודות, מקפים)
+// לפי כיוון הפסקה שמסביב. כשפסקה היא עברית (RTL) וסוגריים באים מיד אחרי
+// קוד אנגלי (LTR), הם "נשלפים" למקום ההפוך. הפתרון: לעטוף כל "ריצה" של
+// תווים שאינם עבריים (קוד/אנגלית/מספרים/סימנים) בתגית <bdi dir="ltr">,
+// שמבודדת את הכיוון שלה מהפסקה שמסביב בלי לשנות איך היא נראית.
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function bidiSafe(str) {
+  const escaped = escapeHtml(str);
+  return escaped.replace(/[^\u0590-\u05FF\n]+/g, (run) => (run.trim() ? `<bdi dir="ltr">${run}</bdi>` : run));
+}
+
 // --- מעקב זמן למידה (לדוח של ההורים + אכיפת מגבלות זמן) ---
 let lessonStartTime = Date.now();
 let timeFlushed = false;
@@ -66,13 +81,13 @@ function renderFrame() {
   const taskBlock = frame.task ? `
     <label class="task-box">
       <input type="checkbox" id="task-check" ${taskChecked[frameIndex] ? 'checked' : ''}>
-      <span>${frame.task}</span>
+      <span>${bidiSafe(frame.task)}</span>
     </label>` : '';
 
   const codeBlock = frame.type === 'code' ? `
     <div class="code-terminal">
       <div class="code-terminal-bar">🖥️ הטרמינל שלי</div>
-      <textarea class="code-input" id="code-input" spellcheck="false">${frame.starterCode || ''}</textarea>
+      <textarea class="code-input" id="code-input" spellcheck="false">${escapeHtml(frame.starterCode || '')}</textarea>
       <button class="btn yellow btn-block" id="run-code-btn" type="button">▶️ הרצה</button>
       <div class="code-output" id="code-output">${codeSolved[frameIndex] ? codeOutputSuccessHTML(codeSolved[frameIndex]) : ''}</div>
     </div>` : '';
@@ -80,15 +95,15 @@ function renderFrame() {
   const pygameBlock = frame.type === 'pygame-code' ? `
     <div class="code-terminal">
       <div class="code-terminal-bar">🐍 hello.py</div>
-      <textarea class="code-input" id="pygame-code-input" spellcheck="false" style="min-height:220px;">${pygameSolved[frameIndex] ? pygameSolved[frameIndex].code : (frame.starterCode || '')}</textarea>
+      <textarea class="code-input" id="pygame-code-input" spellcheck="false" style="min-height:220px;">${escapeHtml(pygameSolved[frameIndex] ? pygameSolved[frameIndex].code : (frame.starterCode || ''))}</textarea>
       <button class="btn yellow btn-block" id="check-pygame-btn" type="button">🔍 בדיקת קוד</button>
-      <div class="code-output" id="pygame-output">${pygameSolved[frameIndex] ? `<div class="code-msg ok">${pygameSolved[frameIndex].feedback}</div>` : ''}</div>
+      <div class="code-output" id="pygame-output">${pygameSolved[frameIndex] ? `<div class="code-msg ok">${bidiSafe(pygameSolved[frameIndex].feedback)}</div>` : ''}</div>
     </div>` : '';
 
   stage.innerHTML = `
     ${frame.image || (frame.type !== 'code' && frame.type !== 'pygame-code') ? `<div class="frame-img-wrap">${imgBlock}</div>` : ''}
     <div class="bubble-row">
-      <div class="bubble">${frame.text}</div>
+      <div class="bubble">${bidiSafe(frame.text)}</div>
       <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
     </div>
     ${taskBlock}
@@ -118,7 +133,7 @@ function renderFrame() {
 }
 
 function codeOutputSuccessHTML(printed) {
-  return `<div class="code-line ok">&gt;&gt;&gt; ${printed}</div><div class="code-msg ok">מעולה! זה בדיוק נכון ✅</div>`;
+  return `<div class="code-line ok">&gt;&gt;&gt; ${bidiSafe(printed)}</div><div class="code-msg ok">מעולה! זה בדיוק נכון ✅</div>`;
 }
 
 function runCode(frame) {
@@ -127,7 +142,7 @@ function runCode(frame) {
   const match = code.match(/print\s*\(\s*(["'])([\s\S]*?)\1\s*\)/);
 
   if (!match) {
-    output.innerHTML = `<div class="code-msg err">לא מצאתי כאן print("...") — נסו לכתוב את זה בדיוק ככה 🧐</div>`;
+    output.innerHTML = `<div class="code-msg err">${bidiSafe('לא מצאתי כאן print("...") — נסו לכתוב את זה בדיוק ככה 🧐')}</div>`;
     return;
   }
 
@@ -139,7 +154,7 @@ function runCode(frame) {
     fireConfetti(24);
     playChime('success');
   } else {
-    output.innerHTML = `<div class="code-line">&gt;&gt;&gt; ${printed}</div><div class="code-msg err">כמעט! זה הדפיס "${printed}" ולא "${frame.expectedPrint}". בדקו מה כתוב בתוך המרכאות ונסו שוב 💪</div>`;
+    output.innerHTML = `<div class="code-line">&gt;&gt;&gt; ${bidiSafe(printed)}</div><div class="code-msg err">${bidiSafe(`כמעט! זה הדפיס "${printed}" ולא "${frame.expectedPrint}". בדקו מה כתוב בתוך המרכאות ונסו שוב 💪`)}</div>`;
   }
 }
 
@@ -150,7 +165,7 @@ async function runPygameCheck(frame) {
   const code = input.value;
 
   if (!code.trim()) {
-    output.innerHTML = `<div class="code-msg err">כתבו קצת קוד קודם, ואז נבדוק ביחד 😊</div>`;
+    output.innerHTML = `<div class="code-msg err">${bidiSafe('כתבו קצת קוד קודם, ואז נבדוק ביחד 😊')}</div>`;
     return;
   }
 
@@ -175,21 +190,21 @@ async function runPygameCheck(frame) {
     const data = await resp.json();
 
     if (!resp.ok) {
-      output.innerHTML = `<div class="code-msg err">אופס, הייתה בעיה קטנה בבדיקה... נסו שוב עוד רגע 😅</div>`;
+      output.innerHTML = `<div class="code-msg err">${bidiSafe('אופס, הייתה בעיה קטנה בבדיקה... נסו שוב עוד רגע 😅')}</div>`;
       return;
     }
 
     if (data.passed) {
-      output.innerHTML = `<div class="code-msg ok">${data.feedback}</div>`;
+      output.innerHTML = `<div class="code-msg ok">${bidiSafe(data.feedback)}</div>`;
       pygameSolved[frameIndex] = { code, feedback: data.feedback };
       document.getElementById('next-btn').disabled = false;
       fireConfetti(24);
       playChime('success');
     } else {
-      output.innerHTML = `<div class="code-msg err">${data.feedback}</div>`;
+      output.innerHTML = `<div class="code-msg err">${bidiSafe(data.feedback)}</div>`;
     }
   } catch (e) {
-    output.innerHTML = `<div class="code-msg err">אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅</div>`;
+    output.innerHTML = `<div class="code-msg err">${bidiSafe('אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅')}</div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
@@ -234,7 +249,7 @@ async function showCompletionScreen() {
     <div style="text-align:center;">
       <img src="assets/maccia-mascot.svg" class="mascot" alt="מציה">
       <h2 class="display" style="color:var(--yellow);">כל הכבוד! 🏆</h2>
-      <p class="bubble" style="display:inline-block;">סיימת את "${lesson.title}"!</p>
+      <p class="bubble" style="display:inline-block;">סיימת את "${bidiSafe(lesson.title)}"!</p>
       <div style="display:flex; gap:12px; margin-top:24px;">
         <a href="dashboard.html" class="btn secondary" style="flex:1;">לשיעורים</a>
         ${nextLessonId ? `<a href="lesson.html?id=${nextLessonId}" class="btn" style="flex:1;">לשיעור הבא ⟶</a>` : ''}
@@ -333,7 +348,7 @@ function appendChatMessage(text, who) {
   const box = document.getElementById('chat-messages');
   const el = document.createElement('div');
   el.className = 'chat-msg ' + who;
-  el.textContent = text;
+  el.innerHTML = bidiSafe(text);
   box.appendChild(el);
   box.scrollTop = box.scrollHeight;
   return el;
@@ -355,9 +370,9 @@ async function sendChatMessage(input, sendBtn) {
       body: JSON.stringify({ message: text, lessonTitle: lesson ? lesson.title : '' })
     });
     const data = await resp.json();
-    thinking.textContent = resp.ok ? data.reply : 'אופס, הייתה בעיה קטנה... נסו שוב עוד רגע 😅';
+    thinking.innerHTML = bidiSafe(resp.ok ? data.reply : 'אופס, הייתה בעיה קטנה... נסו שוב עוד רגע 😅');
   } catch (e) {
-    thinking.textContent = 'אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅';
+    thinking.innerHTML = bidiSafe('אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅');
   } finally {
     sendBtn.disabled = false;
   }
@@ -407,7 +422,7 @@ async function sendDebugError() {
   resultBox.innerHTML = '';
   const thinking = document.createElement('div');
   thinking.className = 'chat-msg bot';
-  thinking.textContent = 'מציה בודקת... 🤔';
+  thinking.innerHTML = bidiSafe('מציה בודקת... 🤔');
   resultBox.appendChild(thinking);
 
   try {
@@ -418,9 +433,9 @@ async function sendDebugError() {
       body: JSON.stringify({ errorMessage })
     });
     const data = await resp.json();
-    thinking.textContent = resp.ok ? data.explanation : 'אופס, הייתה בעיה קטנה... נסו שוב עוד רגע 😅';
+    thinking.innerHTML = bidiSafe(resp.ok ? data.explanation : 'אופס, הייתה בעיה קטנה... נסו שוב עוד רגע 😅');
   } catch (e) {
-    thinking.textContent = 'אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅';
+    thinking.innerHTML = bidiSafe('אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅');
   } finally {
     btn.disabled = false;
   }

@@ -3,25 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מציה — שיעור</title>
+<title>מציה — עולם</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="frame-shell">
+  <div class="neon-bg" id="world-wrap">
+    <div class="float-symbols" id="float-symbols"></div>
+
     <div class="topbar">
-      <a href="dashboard.html" class="logout-link">→ חזרה לשיעורים</a>
-      <span class="display" id="lesson-title-top" style="font-size:1rem;"></span>
-      <div id="lesson-avatar-slot"></div>
-    </div>
-    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-
-    <div class="frame-stage" id="stage">
-      <p style="text-align:center; color:var(--text-dim);">טוען שיעור... ⏳</p>
+      <a href="dashboard.html" class="logout-link">→ מפת העולמות</a>
+      <span class="display" id="world-title-top" style="font-size:1.1rem;"></span>
+      <span class="coin-pill" id="coin-pill">🪙 0</span>
     </div>
 
-    <div class="nav-row" id="nav-row" style="display:none;">
-      <button class="btn secondary" id="prev-btn">⟵ הקודם</button>
-      <button class="btn" id="next-btn">הבא ⟶</button>
+    <div class="wrap">
+      <div id="level-path-container">טוען שלבים... ⏳</div>
     </div>
   </div>
 
@@ -34,6 +30,6 @@
   <script src="js/economy.js"></script>
   <script src="js/shop-data.js"></script>
   <script src="js/worlds-data.js"></script>
-  <script src="js/lesson.js"></script>
+  <script src="js/world.js"></script>
 </body>
 </html>

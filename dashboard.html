@@ -3,34 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מציה — השיעורים שלי</title>
+<title>מציה — בחירת עולם</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="topbar">
-    <span class="display">🎮 מציה</span>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span class="coin-pill" id="coin-pill">🪙 0</span>
-      <a href="#" class="logout-link" onclick="logout()">התנתקות</a>
-    </div>
-  </div>
-
-  <div class="wrap">
-    <div class="bubble-row">
-      <div class="bubble" id="greeting">היייי! מוכנים להמשיך?</div>
-      <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
-    </div>
-
-    <div class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
-      <div id="avatar-preview"></div>
-      <div style="flex:1;">
-        <p style="margin:0 0 6px; font-weight:800;">האווטאר שלי</p>
-        <p style="margin:0 0 12px; color:var(--text-dim); font-size:.85rem;">התלבשו על מציה עם פריטים מהחנות!</p>
-        <a href="shop.html" class="btn yellow" style="font-size:.95rem; padding:10px 20px;">🛍️ לחנות</a>
+  <div class="neon-bg">
+    <div class="topbar">
+      <span class="display">🎮 מציה</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="coin-pill" id="coin-pill">🪙 0</span>
+        <a href="#" class="logout-link" onclick="logout()">התנתקות</a>
       </div>
     </div>
 
-    <div id="map-container">טוען שיעורים... ⏳</div>
+    <div class="wrap">
+      <div class="bubble-row">
+        <div class="bubble" id="greeting">היייי! לאיזה עולם יוצאים היום?</div>
+        <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
+      </div>
+
+      <div class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
+        <div id="avatar-preview"></div>
+        <div style="flex:1;">
+          <p style="margin:0 0 6px; font-weight:800;">האווטאר שלי</p>
+          <p style="margin:0 0 12px; color:var(--text-dim); font-size:.85rem;">התלבשו על מציה עם פריטים מהחנות!</p>
+          <a href="shop.html" class="btn yellow" style="font-size:.95rem; padding:10px 20px;">🛍️ לחנות</a>
+        </div>
+      </div>
+
+      <div id="world-grid" class="world-select-grid">טוען עולמות... ⏳</div>
+    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -41,6 +43,7 @@
   <script src="js/time-limits.js"></script>
   <script src="js/economy.js"></script>
   <script src="js/shop-data.js"></script>
+  <script src="js/worlds-data.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

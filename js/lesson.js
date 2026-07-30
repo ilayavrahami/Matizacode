@@ -47,6 +47,11 @@ requireAuth(async (user) => {
   const allowed = await enforceTimeLimits(user.uid);
   if (!allowed) { document.getElementById('nav-row').style.display = 'none'; return; }
 
+  db.collection('users').doc(user.uid).get().then((userDoc) => {
+    const avatar = userDoc.exists ? userDoc.data().avatar : null;
+    document.getElementById('lesson-avatar-slot').innerHTML = renderAvatarHTML(avatar, 40);
+  }).catch(() => {});
+
   if (!lessonId) { window.location.href = 'dashboard.html'; return; }
 
   const doc = await db.collection('lessons').doc(lessonId).get();
@@ -239,12 +244,14 @@ document.getElementById('next-btn').addEventListener('click', async () => {
       lastActive: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     await flushTimeSpent();
-    const earnedCoins = await awardCoinsOnce(currentUser.uid, `lesson:${lessonId}`, COINS_PER_LESSON);
-    showCompletionScreen(earnedCoins);
+    const isBoss = typeof lesson.order === 'number' && worldForOrder(lesson.order) && worldForOrder(lesson.order).maxOrder === lesson.order;
+    const coinAmount = isBoss ? COINS_PER_BOSS : COINS_PER_LESSON;
+    const earnedCoins = await awardCoinsOnce(currentUser.uid, `lesson:${lessonId}`, coinAmount);
+    showCompletionScreen(earnedCoins ? coinAmount : 0, isBoss);
   }
 });
 
-async function showCompletionScreen(earnedCoins) {
+async function showCompletionScreen(earnedCoins, isBoss) {
   document.getElementById('nav-row').style.display = 'none';
   document.getElementById('progress-fill').style.width = '100%';
 
@@ -257,11 +264,11 @@ async function showCompletionScreen(earnedCoins) {
   document.getElementById('stage').innerHTML = `
     <div style="text-align:center;">
       <img src="assets/maccia-mascot.svg" class="mascot" alt="מציה">
-      <h2 class="display" style="color:var(--yellow);">כל הכבוד! 🏆</h2>
+      <h2 class="display" style="color:var(--yellow);">${isBoss ? 'ניצחתם את הבוס! 💀🏆' : 'כל הכבוד! 🏆'}</h2>
       <p class="bubble" style="display:inline-block;">סיימת את "${bidiSafe(lesson.title)}"!</p>
-      ${earnedCoins ? `<p style="color:var(--yellow); font-weight:800; margin-top:10px;">קיבלת ${COINS_PER_LESSON} מטבעות 🪙</p>` : ''}
+      ${earnedCoins ? `<p style="color:var(--yellow); font-weight:800; margin-top:10px;">קיבלת ${earnedCoins} מטבעות 🪙${isBoss ? ' (בונוס בוס!)' : ''}</p>` : ''}
       <div style="display:flex; gap:12px; margin-top:24px;">
-        <a href="dashboard.html" class="btn secondary" style="flex:1;">לשיעורים</a>
+        <a href="dashboard.html" class="btn secondary" style="flex:1;">מפת העולמות</a>
         ${nextLessonId ? `<a href="lesson.html?id=${nextLessonId}" class="btn" style="flex:1;">לשיעור הבא ⟶</a>` : ''}
       </div>
     </div>`;

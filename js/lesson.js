@@ -47,10 +47,10 @@ requireAuth(async (user) => {
   const allowed = await enforceTimeLimits(user.uid);
   if (!allowed) { document.getElementById('nav-row').style.display = 'none'; return; }
 
-  db.collection('users').doc(user.uid).get().then((userDoc) => {
+  db.collection('users').doc(user.uid).onSnapshot((userDoc) => {
     const avatar = userDoc.exists ? userDoc.data().avatar : null;
     document.getElementById('lesson-avatar-slot').innerHTML = renderAvatarHTML(avatar, 40);
-  }).catch(() => {});
+  }, () => {});
 
   if (!lessonId) { window.location.href = 'dashboard.html'; return; }
 

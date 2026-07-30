@@ -687,3 +687,78 @@ textarea.field { min-height: 160px; font-family: monospace; font-size: .85rem; r
   .level-node-row:nth-child(even) { padding-right: 8%; }
   .level-node-row:nth-child(3n) { padding-left: 8%; }
 }
+
+/* =====================================================================
+   אי צף (Floating Island) — תצוגת עולם מחודשת
+   בנוי מ-SVG/CSS פרוצדורלי (אין כאן קובצי איור/משחק אמיתיים) — צורת אי
+   פשוטה עם דשא/סלע, מפל מונפש, וכמה גבישים דקורטיביים.
+   ===================================================================== */
+.arcade-header {
+  text-align: center; margin: 10px auto 6px; max-width: 480px;
+}
+.arcade-header .arcade-title {
+  display: inline-block;
+  font-family: 'Secular One', sans-serif; font-size: 1.6rem;
+  padding: 10px 30px; border-radius: 999px;
+  background: linear-gradient(180deg, var(--world-dim, #1a2b5c) 0%, var(--bg-deep) 100%);
+  border: 2px solid var(--world-glow, #4A7CFF);
+  color: var(--world-glow-2, var(--turquoise));
+  text-shadow: 0 0 12px var(--world-glow-2, var(--turquoise));
+  box-shadow: 0 0 20px 2px color-mix(in srgb, var(--world-glow, #4A7CFF) 55%, transparent);
+}
+
+.island-nav-row { display: flex; align-items: center; justify-content: center; gap: 10px; max-width: 520px; margin: 0 auto; }
+.island-arrow {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg-panel); border: 2px solid var(--world-glow, #4A7CFF);
+  color: var(--world-glow-2, var(--turquoise)); font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--world-glow, #4A7CFF) 50%, transparent);
+  text-decoration: none;
+}
+.island-arrow.disabled { opacity: .25; pointer-events: none; }
+
+.island-stage {
+  position: relative; width: 100%; max-width: 480px; margin: 14px auto 0;
+  aspect-ratio: 4 / 3;
+}
+.island-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.island-nodes { position: absolute; inset: 0; }
+
+.island-waterfall { animation: island-waterfall-flow 1.2s linear infinite; }
+@keyframes island-waterfall-flow { 0% { opacity: .5; } 50% { opacity: .9; } 100% { opacity: .5; } }
+.island-crystal { animation: neon-float 3s ease-in-out infinite; transform-origin: center; }
+.island-crystal.c2 { animation-delay: .6s; }
+.island-crystal.c3 { animation-delay: 1.2s; }
+
+.island-node-btn {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Secular One', sans-serif; font-size: 1.1rem;
+  text-decoration: none; color: var(--text);
+  background: var(--bg-panel); border: 3px solid var(--bg-panel-2);
+  box-shadow: 0 3px 0 rgba(0,0,0,.3);
+}
+.island-node-btn.done {
+  background: var(--world-dim, var(--bg-panel)); border-color: var(--world-glow-2, var(--turquoise));
+  color: var(--world-glow-2, var(--turquoise));
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--world-glow-2, #2EE6D0) 65%, transparent);
+}
+.island-node-btn.current {
+  background: var(--world-dim, var(--bg-panel)); border-color: var(--world-glow, #4A7CFF);
+  animation: neon-pulse 1.4s ease-in-out infinite;
+}
+.island-node-btn.locked { opacity: .45; filter: grayscale(1); pointer-events: none; }
+.island-node-btn.boss { width: 58px; height: 58px; font-size: 1.7rem; }
+.island-node-label {
+  position: absolute; top: 100%; margin-top: 4px; right: 50%; transform: translateX(50%);
+  white-space: nowrap; font-size: .68rem; color: var(--text-dim); background: rgba(23,18,43,.7);
+  padding: 1px 6px; border-radius: 6px;
+}
+.island-avatar-token {
+  position: absolute; transform: translate(-50%, -145%);
+  width: 42px; height: 42px;
+  animation: neon-float 2s ease-in-out infinite;
+  pointer-events: none; z-index: 5;
+}

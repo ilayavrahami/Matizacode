@@ -94,6 +94,124 @@ const seedLessons = [
       { text: "ישששש!! המחשב שלך הפך עכשיו למפעל משחקים אמיתי! 🏆" },
       { text: "אתם רשמית מוכנים להתחיל ליצור משחקים אמיתיים בשיעורים הבאים. איזה כיף!" }
     ]
+  },
+  {
+    id: "lesson-5",
+    order: 5,
+    title: "שיעור 5: פותחים חלון משחק ראשון",
+    subtitle: "הצעד הראשון לתוך עולם Pygame 🎮",
+    topics: ["ייבוא ספריות (import)", "pygame.init()", "יצירת חלון משחק"],
+    frames: [
+      { text: "עד עכשיו גרמנו למחשב לדבר. עכשיו — נגרום לו לפתוח לנו חלון משחק אמיתי! 🎮" },
+      { text: "בתוך VS Code, תפתחו קובץ חדש בשם game.py באותה תיקייה." },
+      { text: "השורה הראשונה בכל משחק Pygame היא תמיד:", task: "פתחתי קובץ חדש בשם game.py ✅" },
+      { text: "import pygame" },
+      { text: "זה אומר למחשב: 'תביא לי את כל הכלים המיוחדים ליצירת משחקים'. בלי השורה הזו, Pygame לא יעבוד בכלל." },
+      { text: "אחר כך, תמיד קוראים לפונקציה הזו — היא 'מדליקה' את המנוע של Pygame:" },
+      { text: "pygame.init()" },
+      { text: "עכשיו יוצרים את החלון עצמו, עם גודל שאתם בוחרים (רוחב, גובה):" },
+      { text: 'screen = pygame.display.set_mode((800, 600))' },
+      { text: "ואפשר גם לתת לחלון כותרת משלו, עם:" },
+      { text: 'pygame.display.set_caption("המשחק שלי")' },
+      {
+        type: "pygame-code",
+        text: "בואו נתרגל! כתבו כאן קוד שמייבא את pygame, מפעיל אותו, ופותח חלון בגודל 800 על 600 עם כותרת 'המשחק שלי' 👇",
+        starterCode: "import pygame\n\n# כתבו כאן: pygame.init()\n\n# כתבו כאן: יצירת חלון בגודל 800x600\n\n# כתבו כאן: כותרת לחלון\n",
+        taskDescription: "לכתוב קוד Python שמייבא את pygame, קורא ל-pygame.init(), יוצר חלון בגודל 800x600 באמצעות pygame.display.set_mode((800, 600)), ונותן לו כותרת עם pygame.display.set_caption().",
+        hints: "לוודא שיש import pygame, pygame.init(), set_mode עם tuple של (800, 600), ו-set_caption עם מחרוזת כלשהי."
+      },
+      { text: "העתיקו את אותו קוד גם ל-game.py האמיתי שלכם ולחצו Run." },
+      { text: "טעות נפוצה ❌: אם רואים שגיאה על pygame לא מוכר — כנראה שכחתם את שורת ה-import בהתחלה." },
+      { text: "שמתם לב שהחלון נסגר מיד? זה בסדר גמור — בשיעור הבא נלמד איך לגרום לו להישאר פתוח! 😄",
+        task: "ראיתי חלון משחק (גם אם הוא נסגר מיד) ✅" }
+    ]
+  },
+  {
+    id: "lesson-6",
+    order: 6,
+    title: "שיעור 6: לולאת המשחק והרקע הצבעוני",
+    subtitle: "גורמים לחלון להישאר פתוח ✨",
+    topics: ["לולאת משחק (game loop)", "אירועים (events)", "צביעת רקע"],
+    frames: [
+      { text: "שמתם לב שהחלון נסגר מיד? זה כי לא אמרנו למחשב 'תישאר פתוח עד שיגידו לך לצאת'." },
+      { text: "לכל משחק יש 'לולאת משחק' — קטע קוד שרץ שוב ושוב, בלי הפסקה, כל עוד המשחק פועל." },
+      { text: "מתחילים עם משתנה שמסמן שהמשחק רץ:" },
+      { text: "running = True" },
+      { text: "ואז לולאת while שרצה כל עוד running הוא True:" },
+      { text: "while running:" },
+      { text: "בתוך הלולאה, בודקים כל הזמן אם מישהו לחץ על ה-X של החלון:" },
+      { text: "for event in pygame.event.get():\n    if event.type == pygame.QUIT:\n        running = False" },
+      { text: "ובסוף כל סיבוב, צובעים את הרקע ומעדכנים את המסך:" },
+      { text: "screen.fill((46, 230, 208))\npygame.display.update()" },
+      { text: "המספרים (46, 230, 208) הם צבע ב-RGB — בדיוק כמו הטורקיז שמציה אוהבת 💙" },
+      {
+        type: "pygame-code",
+        text: "בואו נתרגל! כתבו לולאת משחק שלמה: running=True, לולאת while, בדיקת QUIT שמכבה את running, וצביעת רקע + עדכון מסך בכל סיבוב 👇",
+        starterCode: "import pygame\npygame.init()\nscreen = pygame.display.set_mode((800, 600))\n\nrunning = True\n\n# כתבו כאן את לולאת ה-while\n\n\npygame.quit()",
+        taskDescription: "לכתוב לולאת while running: שבתוכה יש for event in pygame.event.get() שבודק if event.type == pygame.QUIT ומעדכן running=False, וגם קריאה ל-screen.fill(...) ול-pygame.display.update() (או .flip()) בכל סיבוב של הלולאה.",
+        hints: "חשוב שהלולאה תהיה while running (או תנאי שקול), שתהיה בדיקת QUIT שמכבה את running, ושיהיה fill ו-update/flip בתוך הלולאה."
+      },
+      { text: "העתיקו את הקוד ל-game.py, הריצו, ותראו חלון שנשאר פתוח ובצבע שבחרתם! 🎨" },
+      { text: "טעות נפוצה ❌: אם החלון 'קופא' ולא מגיב — כנראה שכחתם את בדיקת ה-QUIT בתוך הלולאה." },
+      { text: "כל הכבוד! עכשיו יש לכם באמת חלון משחק חי. בשיעור הבא — מציירים בו דמות! 🖌️",
+        task: "יש לי חלון פתוח וצבעוני שנשאר פתוח עד שסוגרים אותו ✅" }
+    ]
+  },
+  {
+    id: "lesson-7",
+    order: 7,
+    title: "שיעור 7: מציירים את הדמות הראשונה",
+    subtitle: "עיגול, ריבוע, ודמות משלכם 🟡",
+    topics: ["ציור צורות (pygame.draw)", "קואורדינטות על המסך"],
+    frames: [
+      { text: "עכשיו הכיף האמיתי מתחיל — מציירים דמות! נתחיל פשוט, עם עיגול צהוב 🟡" },
+      { text: "כדי לצייר עיגול, משתמשים בפקודה:" },
+      { text: "pygame.draw.circle(screen, color, (x, y), radius)" },
+      { text: "screen זה החלון שלנו, color הוא הצבע, (x, y) זה המיקום על המסך, ו-radius זה הרדיוס (גודל העיגול)." },
+      { text: "חשוב: x גדל ימינה, y גדל למטה. הפינה השמאלית-עליונה של המסך היא (0, 0)." },
+      { text: "חשוב עוד יותר: הציור חייב לקרות בתוך לולאת המשחק, אחרי ה-fill ולפני ה-update — אחרת הוא לא ייראה!" },
+      { text: "screen.fill((23, 18, 43))\npygame.draw.circle(screen, (255, 225, 86), (400, 300), 40)\npygame.display.update()" },
+      {
+        type: "pygame-code",
+        text: "בואו נתרגל! בתוך לולאת המשחק שכבר כתבתם, הוסיפו ציור של עיגול צהוב במרכז המסך (400, 300) עם רדיוס 40, אחרי ה-fill ולפני ה-update 👇",
+        starterCode: "import pygame\npygame.init()\nscreen = pygame.display.set_mode((800, 600))\n\nrunning = True\nwhile running:\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n\n    screen.fill((23, 18, 43))\n    # כתבו כאן: ציור העיגול הצהוב\n    pygame.display.update()\n\npygame.quit()",
+        taskDescription: "בתוך לולאת המשחק, אחרי screen.fill(...) ולפני pygame.display.update(), להוסיף שורה שמציירת עיגול עם pygame.draw.circle(screen, צבע_כלשהו, (400, 300), 40) — הצבע יכול להיות כל tuple של RGB, המיקום צריך להיות בערך (400,300) והרדיוס בערך 40.",
+        hints: "לבדוק שיש קריאה ל-pygame.draw.circle עם screen כארגומנט ראשון, מיקום בסביבות (400,300), ורדיוס בסביבות 40, וממוקמת בין ה-fill לבין ה-update בתוך הלולאה."
+      },
+      { text: "העתיקו ל-game.py והריצו — יש לכם עכשיו דמות ראשונה על המסך! 🎉" },
+      { text: "טעות נפוצה ❌: אם העיגול לא מופיע — בדקו שהוא לא נכתב אחרי pygame.display.update() בטעות." },
+      { text: "נסו לשנות את המספרים (x, y) ולראות איך העיגול זז למקום אחר — זה הכנה מושלמת לשיעור הבא! 🕹️",
+        task: "יש לי עיגול צבעוני שמופיע על המסך שלי ✅" }
+    ]
+  },
+  {
+    id: "lesson-8",
+    order: 8,
+    title: "שיעור 8: מזיזים את הדמות עם המקלדת",
+    subtitle: "הופכים את זה למשחק אמיתי! ⌨️",
+    topics: ["קלט מהמקלדת", "משתנים משתנים (x, y)", "לולאת משחק מלאה"],
+    frames: [
+      { text: "עכשיו נלמד את הקסם האמיתי — לגרום לדמות לזוז כשלוחצים על המקלדת! ⌨️" },
+      { text: "קודם, יוצרים משתנים למיקום הדמות, מחוץ ללולאה (כדי שהם 'יזכרו' את המיקום בין סיבוב לסיבוב):" },
+      { text: "x = 400\ny = 300" },
+      { text: "בתוך הלולאה, בודקים אילו מקשים לחוצים כרגע עם:" },
+      { text: "keys = pygame.key.get_pressed()" },
+      { text: "ואז בודקים כל חץ בנפרד ומזיזים את x או y בהתאם:" },
+      { text: "if keys[pygame.K_RIGHT]:\n    x += 5\nif keys[pygame.K_LEFT]:\n    x -= 5\nif keys[pygame.K_UP]:\n    y -= 5\nif keys[pygame.K_DOWN]:\n    y += 5" },
+      { text: "לב שים: y -= 5 מזיז למעלה, כי בפייגיים ציר ה-y הפוך — 0 למעלה, וגדל כלפי מטה." },
+      { text: "לבסוף, מציירים את הדמות במיקום המעודכן: pygame.draw.circle(screen, color, (x, y), 40)" },
+      {
+        type: "pygame-code",
+        text: "בואו נתרגל! בתוך לולאת המשחק, הוסיפו קריאה ל-pygame.key.get_pressed() ובדיקות לארבעת החצים שמזיזות משתנים x ו-y, ואז ציירו את העיגול במיקום (x, y) 👇",
+        starterCode: "import pygame\npygame.init()\nscreen = pygame.display.set_mode((800, 600))\n\nx = 400\ny = 300\n\nrunning = True\nwhile running:\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n\n    # כתבו כאן: קריאת מקשים ועדכון x/y\n\n    screen.fill((23, 18, 43))\n    # כתבו כאן: ציור העיגול במיקום (x, y)\n    pygame.display.update()\n\npygame.quit()",
+        taskDescription: "בתוך לולאת המשחק: לקרוא ל-pygame.key.get_pressed(), לבדוק לפחות את pygame.K_RIGHT/K_LEFT/K_UP/K_DOWN (מספיק שיש בדיקה לכל הכיוונים, גם אם משתמשים ב-elif או במבנה קצת שונה), לעדכן משתנים x ו-y בהתאם, ואז לצייר עיגול/צורה במיקום (x, y) המעודכן בכל סיבוב.",
+        hints: "לבדוק: קריאה ל-get_pressed, שימוש ב-x/y כמשתנים שמוגדרים מחוץ ללולאה, שינוי שלהם בהתאם למקשים, וציור בפועל במיקום (x, y) ולא במספרים קבועים."
+      },
+      { text: "העתיקו ל-game.py, הריצו, ונסו להזיז את הדמות עם החצים! 🕹️" },
+      { text: "טעות נפוצה ❌: אם הדמות לא זזה — בדקו שהציור משתמש ב-(x, y) ולא במספרים קבועים כמו (400, 300)." },
+      { text: "וואו! זה כבר ממש מרגיש כמו משחק! 🎮🏆 עשיתם עבודה מדהימה עד כאן.",
+        task: "הצלחתי להזיז את הדמות שלי עם החצים במקלדת ✅" }
+    ]
   }
 ];
 

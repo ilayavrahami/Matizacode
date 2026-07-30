@@ -5,6 +5,7 @@ let lesson = null;
 let frameIndex = 0;
 let taskChecked = {};
 let codeSolved = {};
+let pygameSolved = {};
 
 // --- מעקב זמן למידה (לדוח של ההורים + אכיפת מגבלות זמן) ---
 let lessonStartTime = Date.now();
@@ -76,14 +77,23 @@ function renderFrame() {
       <div class="code-output" id="code-output">${codeSolved[frameIndex] ? codeOutputSuccessHTML(codeSolved[frameIndex]) : ''}</div>
     </div>` : '';
 
+  const pygameBlock = frame.type === 'pygame-code' ? `
+    <div class="code-terminal">
+      <div class="code-terminal-bar">🐍 hello.py</div>
+      <textarea class="code-input" id="pygame-code-input" spellcheck="false" style="min-height:220px;">${pygameSolved[frameIndex] ? pygameSolved[frameIndex].code : (frame.starterCode || '')}</textarea>
+      <button class="btn yellow btn-block" id="check-pygame-btn" type="button">🔍 בדיקת קוד</button>
+      <div class="code-output" id="pygame-output">${pygameSolved[frameIndex] ? `<div class="code-msg ok">${pygameSolved[frameIndex].feedback}</div>` : ''}</div>
+    </div>` : '';
+
   stage.innerHTML = `
-    ${frame.image || frame.type !== 'code' ? `<div class="frame-img-wrap">${imgBlock}</div>` : ''}
+    ${frame.image || (frame.type !== 'code' && frame.type !== 'pygame-code') ? `<div class="frame-img-wrap">${imgBlock}</div>` : ''}
     <div class="bubble-row">
       <div class="bubble">${frame.text}</div>
       <img src="assets/maccia-mascot.svg" class="mascot mascot-sm" alt="מציה">
     </div>
     ${taskBlock}
     ${codeBlock}
+    ${pygameBlock}
   `;
 
   if (frame.task) {
@@ -96,10 +106,15 @@ function renderFrame() {
     document.getElementById('run-code-btn').addEventListener('click', () => runCode(frame));
   }
 
+  if (frame.type === 'pygame-code') {
+    document.getElementById('check-pygame-btn').addEventListener('click', () => runPygameCheck(frame));
+  }
+
   document.getElementById('prev-btn').disabled = frameIndex === 0;
   const nextBtn = document.getElementById('next-btn');
   nextBtn.textContent = (frameIndex === frames.length - 1) ? 'סיימתי! 🏆' : 'הבא ⟶';
-  nextBtn.disabled = frame.type === 'code' && !codeSolved[frameIndex];
+  nextBtn.disabled = (frame.type === 'code' && !codeSolved[frameIndex]) ||
+                      (frame.type === 'pygame-code' && !pygameSolved[frameIndex]);
 }
 
 function codeOutputSuccessHTML(printed) {
@@ -127,6 +142,54 @@ function runCode(frame) {
     output.innerHTML = `<div class="code-line">&gt;&gt;&gt; ${printed}</div><div class="code-msg err">כמעט! זה הדפיס "${printed}" ולא "${frame.expectedPrint}". בדקו מה כתוב בתוך המרכאות ונסו שוב 💪</div>`;
   }
 }
+
+async function runPygameCheck(frame) {
+  const input = document.getElementById('pygame-code-input');
+  const btn = document.getElementById('check-pygame-btn');
+  const output = document.getElementById('pygame-output');
+  const code = input.value;
+
+  if (!code.trim()) {
+    output.innerHTML = `<div class="code-msg err">כתבו קצת קוד קודם, ואז נבדוק ביחד 😊</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'מציה בודקת... 🤔';
+  output.innerHTML = '';
+
+  try {
+    const idToken = await currentUser.getIdToken();
+    const resp = await fetch('/.netlify/functions/check-exercise', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({ code, taskDescription: frame.taskDescription || '', hints: frame.hints || '' })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      output.innerHTML = `<div class="code-msg err">אופס, הייתה בעיה קטנה בבדיקה... נסו שוב עוד רגע 😅</div>`;
+      return;
+    }
+
+    if (data.passed) {
+      output.innerHTML = `<div class="code-msg ok">${data.feedback}</div>`;
+      pygameSolved[frameIndex] = { code, feedback: data.feedback };
+      document.getElementById('next-btn').disabled = false;
+      fireConfetti(24);
+      playChime('success');
+    } else {
+      output.innerHTML = `<div class="code-msg err">${data.feedback}</div>`;
+    }
+  } catch (e) {
+    output.innerHTML = `<div class="code-msg err">אופס, לא הצלחתי להתחבר... בדקו את החיבור לאינטרנט 😅</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
 
 document.getElementById('prev-btn').addEventListener('click', () => {
   if (frameIndex > 0) { frameIndex--; renderFrame(); }

@@ -19,7 +19,11 @@ function escapeHtml(str) {
 
 function bidiSafe(str) {
   const escaped = escapeHtml(str);
-  return escaped.replace(/[^\u0590-\u05FF\n]+/g, (run) => (run.trim() ? `<bdi dir="ltr">${run}</bdi>` : run));
+  // עוטפים רק ריצות שבאמת מכילות אות לטינית (קוד/אנגלית אמיתיים).
+  // סימני פיסוק "נייטרליים" שמקיפים מילה עברית (כמו (שווה) או 'שווה') לא
+  // נוגעים בהם בכלל — הם כבר מוצגים נכון כחלק טבעי מהפסקה העברית, ועטיפה
+  // שלהם בנפרד היא מה שגרם לבאג ההפוך.
+  return escaped.replace(/[^\u0590-\u05FF\n]+/g, (run) => (/[A-Za-z]/.test(run) ? `<bdi dir="ltr">${run}</bdi>` : run));
 }
 
 // --- מעקב זמן למידה (לדוח של ההורים + אכיפת מגבלות זמן) ---

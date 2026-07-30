@@ -164,7 +164,13 @@ async function runPygameCheck(frame) {
     const resp = await fetch('/.netlify/functions/check-exercise', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
-      body: JSON.stringify({ code, taskDescription: frame.taskDescription || '', hints: frame.hints || '' })
+      body: JSON.stringify({
+        code,
+        taskDescription: frame.taskDescription || '',
+        hints: frame.hints || '',
+        requiredPatterns: frame.requiredPatterns || [],
+        starterCode: frame.starterCode || ''
+      })
     });
     const data = await resp.json();
 

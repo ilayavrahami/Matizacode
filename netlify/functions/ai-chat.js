@@ -1,9 +1,10 @@
-// פרוקסי בטוח לצ'אט העזרה של מציה — דרך OpenRouter, עם ה-auto-router החינמי
-// (openrouter/free) שבוחר לבד מודל חינמי זמין.
+// פרוקסי בטוח לצ'אט העזרה של מציה — דרך OpenRouter (ראו _openrouter.js
+// למודלים בשימוש ולוגיקת הנפילה-אחורה).
 // דורש משתנה סביבה OPENROUTER_API_KEY ב-Netlify (מפתח מ-https://openrouter.ai/keys).
 // המפתח נשאר בצד השרת בלבד — לעולם לא נשלח לדפדפן.
 
 const { getAdmin, jsonResponse, CORS_HEADERS } = require('./_firebase-admin');
+const { callOpenRouter } = require('./_openrouter');
 
 const SYSTEM_PROMPT = `את מציה, עוזרת לימודית חמודה, מעודדת וסבלנית לילדים שלומדים
 תכנות ובניית משחקים (Python, VS Code, Pygame).
@@ -41,45 +42,15 @@ exports.handler = async (event) => {
       return jsonResponse(400, { error: 'הודעה לא תקינה' });
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) return jsonResponse(500, { error: 'חסר משתנה סביבה OPENROUTER_API_KEY' });
-
     const contextLine = lessonTitle ? `\n\nהילד/ה כרגע בשיעור: "${lessonTitle}".` : '';
 
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
-        // OpenRouter מבקש כותרות זיהוי אלה (לא חובה, אבל מומלץ ומשפר עדיפות בתור החינמי)
-        'HTTP-Referer': 'https://matzia-site.netlify.app',
-        'X-Title': 'Matzia'
-      },
-      body: JSON.stringify({
-        // DeepSeek הפסיקה להציע מודלים חינמיים ב-OpenRouter (נכון ליולי 2026).
-        // "openrouter/free" הוא ה-auto-router הרשמי של OpenRouter — הוא בוחר
-        // אוטומטית מודל חינמי זמין, כך שהצ'אט ימשיך לעבוד גם כשספקים מחליפים
-        // את היצע המודלים החינמיים שלהם. אם תרצו לקבע מודל ספציפי במקום,
-        // חלופה יציבה נכון להיום: 'meta-llama/llama-3.3-70b-instruct:free'.
-        model: 'openrouter/free',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT + contextLine },
-          { role: 'user', content: message }
-        ],
-        max_tokens: 200,
-        temperature: 0.7
-      })
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error('OpenRouter error', resp.status, errText.slice(0, 500));
-      return jsonResponse(502, { error: 'שגיאה מול שירות ה-AI: ' + errText.slice(0, 200) });
-    }
-
-    const data = await resp.json();
-    const reply = data?.choices?.[0]?.message?.content?.trim()
-      || 'אופס, לא הצלחתי לחשוב על תשובה עכשיו... נסו שוב? 😊';
+    const reply = await callOpenRouter(
+      [
+        { role: 'system', content: SYSTEM_PROMPT + contextLine },
+        { role: 'user', content: message }
+      ],
+      { maxTokens: 200, temperature: 0.7, title: 'Matzia Chat' }
+    );
 
     return jsonResponse(200, { reply });
   } catch (err) {

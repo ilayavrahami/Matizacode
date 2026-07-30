@@ -4,6 +4,7 @@
 // דורש משתנה סביבה OPENROUTER_API_KEY (אותו מפתח כמו ai-chat / debug-helper).
 
 const { getAdmin, jsonResponse, CORS_HEADERS } = require('./_firebase-admin');
+const { callOpenRouter } = require('./_openrouter');
 
 // רשימת מילים חסומות בסיסית — יש להרחיב לפי הצורך. שומרים קצר בכוונה כאן.
 const BLOCKED_WORDS = [
@@ -42,35 +43,22 @@ const MODERATION_SYSTEM_PROMPT = `את מסננת תוכן אוטומטית לפ
 וסיבה קצרה מאוד בעברית (עד 8 מילים). שום דבר אחר.`;
 
 async function aiCheck(text) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return { approved: true, reason: null }; // אין מפתח מוגדר — לא חוסמים בגלל זה, רק הפילטר הבסיסי פעיל
+  if (!process.env.OPENROUTER_API_KEY) return { approved: true, reason: null }; // אין מפתח מוגדר — לא חוסמים בגלל זה, רק הפילטר הבסיסי פעיל
 
-  const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey,
-      'HTTP-Referer': 'https://matzia-site.netlify.app',
-      'X-Title': 'Matzia Moderation'
-    },
-    body: JSON.stringify({
-      model: 'openrouter/free',
-      messages: [
+  let verdict;
+  try {
+    verdict = await callOpenRouter(
+      [
         { role: 'system', content: MODERATION_SYSTEM_PROMPT },
         { role: 'user', content: text.slice(0, 2000) }
       ],
-      max_tokens: 40,
-      temperature: 0
-    })
-  });
-
-  if (!resp.ok) {
-    console.error('moderation AI error', resp.status, await resp.text());
+      { maxTokens: 40, temperature: 0, title: 'Matzia Moderation' }
+    );
+  } catch (e) {
+    console.error('moderation AI error', e.message);
     return { approved: true, reason: null }; // כשל בשירות ה-AI — לא חוסמים, רק לוגים לבדיקה ידנית מאוחר יותר
   }
 
-  const data = await resp.json();
-  const verdict = (data?.choices?.[0]?.message?.content || '').trim();
   if (verdict.toUpperCase().startsWith('REJECT')) {
     return { approved: false, reason: verdict.split(':').slice(1).join(':').trim() || 'תוכן לא מתאים' };
   }

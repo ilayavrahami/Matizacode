@@ -1,7 +1,9 @@
-// מתרגם הודעות שגיאה של Python להסבר ידידותי לילדים, דרך OpenRouter.
+// מתרגם הודעות שגיאה של Python להסבר ידידותי לילדים, דרך OpenRouter
+// (ראו _openrouter.js למודלים בשימוש ולוגיקת הנפילה-אחורה).
 // דורש משתנה סביבה OPENROUTER_API_KEY ב-Netlify (אותו מפתח כמו ai-chat).
 
 const { getAdmin, jsonResponse, CORS_HEADERS } = require('./_firebase-admin');
+const { callOpenRouter } = require('./_openrouter');
 
 const SYSTEM_PROMPT = `את מציה, עוזרת דיבאגינג חמודה וסבלנית לילדים שלומדים Python.
 מקבלים ממך קטע קוד (אופציונלי) והודעת שגיאה אמיתית מ-Python (למשל
@@ -38,41 +40,17 @@ exports.handler = async (event) => {
     }
     const code = typeof codeSnippet === 'string' ? codeSnippet.slice(0, 1500) : '';
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) return jsonResponse(500, { error: 'חסר משתנה סביבה OPENROUTER_API_KEY' });
-
     const userContent = code
       ? `הקוד:\n${code}\n\nהודעת השגיאה:\n${errorMessage}`
       : `הודעת השגיאה:\n${errorMessage}`;
 
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
-        'HTTP-Referer': 'https://matzia-site.netlify.app',
-        'X-Title': 'Matzia Debug Helper'
-      },
-      body: JSON.stringify({
-        model: 'openrouter/free',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userContent }
-        ],
-        max_tokens: 220,
-        temperature: 0.5
-      })
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error('OpenRouter error (debug-helper)', resp.status, errText.slice(0, 500));
-      return jsonResponse(502, { error: 'שגיאה מול שירות ה-AI: ' + errText.slice(0, 200) });
-    }
-
-    const data = await resp.json();
-    const explanation = data?.choices?.[0]?.message?.content?.trim()
-      || 'אופס, לא הצלחתי להבין את השגיאה הזו... נסו להדביק אותה שוב 😅';
+    const explanation = await callOpenRouter(
+      [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userContent }
+      ],
+      { maxTokens: 220, temperature: 0.5, title: 'Matzia Debug Helper' }
+    );
 
     return jsonResponse(200, { explanation });
   } catch (err) {

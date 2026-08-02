@@ -707,7 +707,7 @@ textarea.field { min-height: 160px; font-family: monospace; font-size: .85rem; r
   box-shadow: 0 0 20px 2px color-mix(in srgb, var(--world-glow, #4A7CFF) 55%, transparent);
 }
 
-.island-nav-row { display: flex; align-items: center; justify-content: center; gap: 10px; max-width: 520px; margin: 0 auto; }
+.island-nav-row { display: flex; align-items: center; justify-content: center; gap: 16px; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
 .island-arrow {
   width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
   background: var(--bg-panel); border: 2px solid var(--world-glow, #4A7CFF);
@@ -718,47 +718,69 @@ textarea.field { min-height: 160px; font-family: monospace; font-size: .85rem; r
 }
 .island-arrow.disabled { opacity: .25; pointer-events: none; }
 
-.island-stage {
-  position: relative; width: 100%; max-width: 480px; margin: 14px auto 0;
-  aspect-ratio: 4 / 3;
+/* ---- רקע כללי בסגנון GD World: גרדיאנט כחול/טורקיז חי במקום צבע שטוח ---- */
+.neon-bg {
+  background:
+    radial-gradient(ellipse at 50% -10%, #3a6fd8 0%, transparent 55%),
+    linear-gradient(180deg, #0b2447 0%, #17122B 60%, #0d0a1a 100%);
 }
-.island-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.island-stage {
+  position: relative; width: 100%; max-width: 1000px; margin: 14px auto 0;
+  aspect-ratio: 1672 / 941; /* יחס הממדים המדויק של floating-island.png */
+}
+.island-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)) var(--island-tint, none);
+}
+/* גוון שונה מעל אותה תמונת בסיס, כדי להבדיל חזותית בין עולמות בלי צורך
+   בתמונה נפרדת לכל עולם */
+.world-theme-blue   .island-bg { --island-tint: hue-rotate(0deg) saturate(1); }
+.world-theme-green  .island-bg { --island-tint: hue-rotate(70deg) saturate(1.1); }
+.world-theme-purple .island-bg { --island-tint: hue-rotate(210deg) saturate(1.05); }
+.world-theme-red    .island-bg { --island-tint: hue-rotate(-45deg) saturate(1.15); }
+
 .island-nodes { position: absolute; inset: 0; }
 
-.island-waterfall { animation: island-waterfall-flow 1.2s linear infinite; }
-@keyframes island-waterfall-flow { 0% { opacity: .5; } 50% { opacity: .9; } 100% { opacity: .5; } }
-.island-crystal { animation: neon-float 3s ease-in-out infinite; transform-origin: center; }
-.island-crystal.c2 { animation-delay: .6s; }
-.island-crystal.c3 { animation-delay: 1.2s; }
-
 .island-node-btn {
-  position: absolute; transform: translate(-50%, -50%);
-  width: 44px; height: 44px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Secular One', sans-serif; font-size: 1.1rem;
-  text-decoration: none; color: var(--text);
-  background: var(--bg-panel); border: 3px solid var(--bg-panel-2);
-  box-shadow: 0 3px 0 rgba(0,0,0,.3);
+  position: absolute; transform: translate(-50%, -60%);
+  width: 6.5%; aspect-ratio: 1; min-width: 26px; max-width: 46px;
+  border-radius: 50%;
+  display: block;
+  background: transparent; border: none;
+  text-decoration: none;
 }
-.island-node-btn.done {
-  background: var(--world-dim, var(--bg-panel)); border-color: var(--world-glow-2, var(--turquoise));
-  color: var(--world-glow-2, var(--turquoise));
-  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--world-glow-2, #2EE6D0) 65%, transparent);
+.island-node-btn.boss { width: 8.5%; max-width: 58px; }
+.island-node-btn.current { animation: island-glow-pulse 1.6s ease-in-out infinite; }
+@keyframes island-glow-pulse {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50% { filter: brightness(1.6) saturate(1.4) drop-shadow(0 0 10px var(--world-glow, #4A7CFF)); }
 }
-.island-node-btn.current {
-  background: var(--world-dim, var(--bg-panel)); border-color: var(--world-glow, #4A7CFF);
-  animation: neon-pulse 1.4s ease-in-out infinite;
+.island-node-btn.locked { filter: grayscale(1) brightness(.55); pointer-events: none; }
+.island-node-btn::after {
+  position: absolute; top: -4px; left: -4px;
+  font-size: .75rem; line-height: 1;
+  background: var(--bg-deep); border-radius: 50%; padding: 1px 2px;
+  box-shadow: 0 0 0 2px var(--bg-deep);
 }
-.island-node-btn.locked { opacity: .45; filter: grayscale(1); pointer-events: none; }
-.island-node-btn.boss { width: 58px; height: 58px; font-size: 1.7rem; }
+.island-node-btn.done::after { content: '✅'; }
 .island-node-label {
   position: absolute; top: 100%; margin-top: 4px; right: 50%; transform: translateX(50%);
-  white-space: nowrap; font-size: .68rem; color: var(--text-dim); background: rgba(23,18,43,.7);
-  padding: 1px 6px; border-radius: 6px;
+  white-space: nowrap; font-size: .68rem; color: var(--text-dim); background: rgba(23,18,43,.85);
+  padding: 1px 6px; border-radius: 6px; max-width: 140px; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transition: opacity .15s ease; pointer-events: none;
 }
+.island-node-btn:hover .island-node-label,
+.island-node-btn:focus .island-node-label { opacity: 1; }
 .island-avatar-token {
-  position: absolute; transform: translate(-50%, -145%);
-  width: 42px; height: 42px;
-  animation: neon-float 2s ease-in-out infinite;
+  position: absolute; transform: translate(-50%, -155%);
+  width: 8%; min-width: 30px; max-width: 50px;
+  animation: neon-float 2s ease-in-out infinite, island-avatar-land .5s ease-out;
   pointer-events: none; z-index: 5;
+  filter: drop-shadow(0 0 8px var(--world-glow-2, var(--turquoise)));
+}
+@keyframes island-avatar-land {
+  0% { opacity: 0; transform: translate(-50%, -220%) scale(.6); }
+  70% { opacity: 1; }
+  100% { transform: translate(-50%, -155%) scale(1); }
 }

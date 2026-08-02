@@ -264,6 +264,95 @@ const seedLessons = [
       { text: "וואו! זה כבר ממש מרגיש כמו משחק! 🎮🏆 עשיתם עבודה מדהימה עד כאן.",
         task: "הצלחתי להזיז את הדמות שלי עם החצים במקלדת ✅" }
     ]
+  },
+  {
+    id: "lesson-9",
+    order: 9,
+    title: "שיעור 9: אוספים מטבעות וניקוד",
+    subtitle: "הופכים את זה למשחק עם מטרה 🪙",
+    topics: ["חישוב מרחק (משפט פיתגורס בקוד)", "משתנה ניקוד", "מודול random"],
+    frames: [
+      { text: "יש לכם דמות שזזה — עכשיו נוסיף לה מטרה: לאסוף מטבעות ולצבור ניקוד! 🪙" },
+      { text: "קודם, יוצרים משתנים למיקום המטבע — בדיוק כמו x ו-y של הדמות, רק למטבע:" },
+      { text: "coin_x = 600\ncoin_y = 200" },
+      { text: "ומשתנה נוסף לניקוד, שמתחיל מ-0:" },
+      { text: "score = 0" },
+      { text: "כדי לדעת מתי הדמות 'נגעה' במטבע, צריך לחשב את המרחק ביניהם. יש לזה נוסחה מתמטית — בעצם משפט פיתגורס שלמדתם בבית ספר! 📐" },
+      { text: "distance = ((x - coin_x) ** 2 + (y - coin_y) ** 2) ** 0.5" },
+      { text: "בואו נפרק: (x - coin_x) זה כמה רחוק הדמות מהמטבע אופקית. הסימן ** אומר 'בחזקת' — אז ** 2 זה 'בריבוע' (כדי שהמספר תמיד יהיה חיובי, גם אם ההפרש שלילי)." },
+      { text: "עושים את אותו דבר אנכית עם y, מחברים את שני הריבועים, ולוקחים ** 0.5 בסוף — זה בפייתון הדרך לכתוב 'שורש ריבועי'." },
+      { text: "עכשיו בודקים: אם המרחק קטן מ-30 פיקסלים (כלומר הדמות ממש קרוב למטבע), נחשב שהיא 'אספה' אותו:" },
+      { text: "if distance < 30:\n    score += 1" },
+      { text: "score += 1 כבר מוכר לכם משיעור 8 — זה קיצור ל'תוסיפו 1 למה שכבר יש ב-score'." },
+      { text: "בונוס כיפי: אחרי שאספו מטבע, אפשר להעביר אותו למקום אקראי חדש, כדי שהמשחק יימשך! לשם כך צריך לייבא כלי חדש בהתחלת הקובץ:" },
+      { text: "import random" },
+      { text: "ואז, בתוך אותו if (מוזח פנימה פעמיים!), מזיזים את המטבע למקום רנדומלי:" },
+      { text: "coin_x = random.randint(50, 750)\ncoin_y = random.randint(50, 550)" },
+      { text: "random.randint(50, 750) אומר: 'תבחר מספר שלם אקראי, בין 50 ל-750'. זה שומר על המטבע רחוק מהקצוות של החלון." },
+      { text: "לא לשכוח לצייר את המטבע! בתוך הלולאה, אחרי ה-fill ולפני ה-update, ליד ציור הדמות:" },
+      { text: "pygame.draw.circle(screen, (255, 225, 86), (coin_x, coin_y), 15)" },
+      {
+        type: "pygame-code",
+        text: "בואו נתרגל! הוסיפו למשחק שלכם משתני מטבע (coin_x, coin_y) וניקוד (score), חישוב מרחק, ותנאי שמוסיף לניקוד כשמתקרבים למטבע 👇",
+        starterCode: "import pygame\npygame.init()\nscreen = pygame.display.set_mode((800, 600))\n\nx = 400\ny = 300\n# כתבו כאן: coin_x, coin_y, score\n\nrunning = True\nwhile running:\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n\n    keys = pygame.key.get_pressed()\n    if keys[pygame.K_RIGHT]:\n        x += 5\n    if keys[pygame.K_LEFT]:\n        x -= 5\n    if keys[pygame.K_UP]:\n        y -= 5\n    if keys[pygame.K_DOWN]:\n        y += 5\n\n    # כתבו כאן: חישוב distance ותנאי לאיסוף מטבע\n\n    screen.fill((23, 18, 43))\n    pygame.draw.circle(screen, (255, 225, 86), (x, y), 40)\n    # כתבו כאן: ציור המטבע\n    pygame.display.update()\n\npygame.quit()",
+        taskDescription: "להוסיף משתני coin_x, coin_y ו-score, לחשב distance בין (x,y) לבין (coin_x,coin_y) לפי נוסחת המרחק (הפרשים בריבוע, סכום, בחזקת 0.5), ותנאי if distance < מספר_כלשהו שמוסיף 1 ל-score. גם ציור של המטבע עם pygame.draw.circle הוא חלק מהתרגיל.",
+        hints: "לבדוק: הגדרת coin_x/coin_y/score, שימוש בנוסחת המרחק עם **2 ו-**0.5, תנאי if על distance שמגדיל את score, וקריאה נוספת ל-pygame.draw.circle עבור המטבע.",
+        requiredPatterns: [
+          { pattern: "coin_x", hint: "לא מצאתי משתנה coin_x — זה המיקום האופקי של המטבע 🪙" },
+          { pattern: "score", hint: "לא מצאתי משתנה score — הוא זה שסופר כמה מטבעות אספתם 🏆" },
+          { pattern: "** 2", hint: "לא מצאתי בחזקת 2 (** 2) בחישוב המרחק — זו הדרך להעלות מספר בריבוע 📐" },
+          { pattern: "0.5", hint: "לא מצאתי ** 0.5 — זה השורש הריבועי שסוגר את נוסחת המרחק 📐" },
+          { pattern: "distance", hint: "לא מצאתי משתנה distance — הוא שומר את המרחק המחושב בין הדמות למטבע" },
+          { pattern: "draw.circle(", hint: "אל תשכחו לצייר גם את המטבע עם pygame.draw.circle 🟡" }
+        ]
+      },
+      { text: "העתיקו ל-game.py, הריצו, ונסו לאסוף כמה מטבעות! 🪙🪙🪙" },
+      { text: "טעות נפוצה ❌: אם הניקוד עולה יותר מדי מהר או לא עולה בכלל — בדקו את המספר שבחרתם בתנאי (distance < 30), אולי הוא גדול/קטן מדי." },
+      { text: "מעולה! עכשיו יש לכם משחק עם מטרה אמיתית. בשיעור הבא — נראה את הניקוד על המסך! 📊",
+        task: "אספתי לפחות מטבע אחד ונקודות עלו ✅" }
+    ]
+  },
+  {
+    id: "lesson-10",
+    order: 10,
+    title: "שיעור 10: מציגים ניקוד ומסך ניצחון",
+    subtitle: "המשחק המלא שלכם! 🏆",
+    topics: ["טקסט על המסך (pygame.font)", "תנאי ניצחון"],
+    frames: [
+      { text: "המשחק כבר עובד מצוין — אבל השחקן לא רואה את הניקוד שלו! בואו נציג אותו על המסך. 📊" },
+      { text: "כדי לכתוב טקסט ב-Pygame, קודם יוצרים 'גופן' (font) — כמו לבחור סוג כתב לפני שכותבים:" },
+      { text: "font = pygame.font.SysFont(None, 40)" },
+      { text: "None אומר 'תשתמשו בגופן ברירת המחדל של המחשב', ו-40 זה גודל האותיות." },
+      { text: "שימו לב: הגופן הבסיסי הזה יודע להציג היטב אנגלית, אבל לא תמיד עברית כמו שצריך — אז בתוך המשחק עצמו נציג את הניקוד באנגלית. זה נורמלי לגמרי, וגם במשחקים מקצועיים הרבה טקסט במשחק עצמו הוא באנגלית 😊" },
+      { text: "בתוך הלולאה, יוצרים 'תמונה' של הטקסט עם הניקוד הנוכחי:" },
+      { text: 'score_text = font.render("Score: " + str(score), True, (255, 255, 255))' },
+      { text: "בואו נפרק: font.render(...) 'מצייר' את הטקסט לתמונה. \"Score: \" + str(score) מחבר את המילה עם הניקוד — str(score) הופך את המספר למחרוזת טקסט כדי שאפשר יהיה לחבר אותו למילה." },
+      { text: "True אומר 'תחליקו את הפינות של האותיות' (יראה יפה יותר), ו-(255,255,255) זה הצבע — לבן." },
+      { text: "עכשיו 'מדביקים' את התמונה הזו על המסך, עם blit — כמו להדביק מדבקה במקום מסוים:" },
+      { text: "screen.blit(score_text, (10, 10))" },
+      { text: "(10, 10) זה המיקום — 10 פיקסלים מהקצה השמאלי, 10 מלמעלה. חשוב: כותבים את השורה הזו אחרי ה-fill ואחרי הציורים, ולפני ה-update — בדיוק כמו כל דבר אחר שרוצים לראות." },
+      { text: "לבסוף, בואו נוסיף תנאי ניצחון: אם צברתם מספיק נקודות, מציגים הודעת ניצחון גדולה!" },
+      { text: 'if score >= 5:\n    win_text = font.render("You Win!", True, (46, 230, 208))\n    screen.blit(win_text, (350, 280))' },
+      { text: "score >= 5 אומר 'אם הניקוד גדול או שווה ל-5'. כשזה קורה, יוצרים טקסט ניצחון חדש בצבע טורקיז, ומדביקים אותו במרכז המסך בערך." },
+      {
+        type: "pygame-code",
+        text: "בואו נתרגל! צרו font, הציגו את הניקוד על המסך עם render+blit, והוסיפו תנאי שמציג הודעת ניצחון כשהניקוד מגיע ל-5 👇",
+        starterCode: "import pygame\npygame.init()\nscreen = pygame.display.set_mode((800, 600))\nfont = pygame.font.SysFont(None, 40)\n\nx = 400\ny = 300\ncoin_x = 600\ncoin_y = 200\nscore = 0\n\nrunning = True\nwhile running:\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n\n    keys = pygame.key.get_pressed()\n    if keys[pygame.K_RIGHT]:\n        x += 5\n    if keys[pygame.K_LEFT]:\n        x -= 5\n    if keys[pygame.K_UP]:\n        y -= 5\n    if keys[pygame.K_DOWN]:\n        y += 5\n\n    distance = ((x - coin_x) ** 2 + (y - coin_y) ** 2) ** 0.5\n    if distance < 30:\n        score += 1\n\n    screen.fill((23, 18, 43))\n    pygame.draw.circle(screen, (255, 225, 86), (x, y), 40)\n    pygame.draw.circle(screen, (255, 225, 86), (coin_x, coin_y), 15)\n    # כתבו כאן: הצגת הניקוד על המסך\n    # כתבו כאן: תנאי ניצחון עם score >= 5\n    pygame.display.update()\n\npygame.quit()",
+        taskDescription: "להציג את הניקוד על המסך: ליצור score_text עם font.render (המחרוזת חייבת לכלול את המילה score או Score והמשתנה score עצמו, למשל עם + str(score)), ולהדביק אותו עם screen.blit. בנוסף, תנאי if score >= 5 (או מספר סביר דומה) שמציג טקסט ניצחון נוסף עם render+blit.",
+        hints: "לבדוק: font כבר מוגדר למעלה, יש קריאה ל-font.render עם str(score) בתוכה, קריאה ל-screen.blit עם התוצאה, ותנאי על score (>=5 או דומה) שמציג טקסט נוסף.",
+        requiredPatterns: [
+          { pattern: "render(", hint: "לא מצאתי font.render(...) — זו הפקודה שיוצרת 'תמונה' מטקסט 🔤" },
+          { pattern: "blit(", hint: "לא מצאתי screen.blit(...) — זו הפקודה שמדביקה את הטקסט על המסך 📋" },
+          { pattern: "str(score)", hint: "לא מצאתי str(score) — צריך להפוך את המספר score למחרוזת כדי לחבר אותו לטקסט אחר" },
+          { pattern: "score >=", hint: "לא מצאתי תנאי עם score >= — זה תנאי הניצחון שבודק אם הגעתם למספיק נקודות 🏆" }
+        ]
+      },
+      { text: "העתיקו ל-game.py, הריצו, ונסו לנצח את המשחק שלכם! 🏆" },
+      { text: "טעות נפוצה ❌: אם רואים שגיאת AttributeError על font — בדקו שהשורה font = pygame.font.SysFont(None, 40) נמצאת מחוץ ללולאה, לא בתוכה." },
+      { text: "🎉🎊 מזל טוב!! בניתם משחק Pygame שלם, מההתחלה ועד הסוף — עם דמות, תנועה, מטרה, ניקוד, וניצחון!" },
+      { text: "אתם רשמית מתכנתי משחקים! 🏆👾 מכאן, השמיים הם הגבול — נסו להוסיף עוד רעיונות משלכם: אויבים, חיים, רמות, וכל מה שתדמיינו.",
+        task: "בניתי משחק Pygame שלם משלי! ✅" }
+    ]
   }
 ];
 

@@ -2,50 +2,6 @@ const worldId = new URLSearchParams(window.location.search).get('world');
 const worldIndex = WORLDS.findIndex((w) => w.id === worldId);
 const world = worldIndex === -1 ? null : WORLDS[worldIndex];
 
-// אי מתחת ל-viewBox קבוע 400x300. הנתיב המפותל (island-trail-path) רץ על
-// פני שטח הדשא — צמתי השלבים ממוקמים בדיוק עליו לפי אורך המסלול, כך שזה
-// מסתגל אוטומטית לכל מספר שיעורים בעולם.
-function buildIslandSVG() {
-  return `
-    <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="grassGrad" cx="45%" cy="35%" r="75%">
-          <stop offset="0%" style="stop-color:var(--world-glow-2, #2EE6D0)"/>
-          <stop offset="100%" style="stop-color:var(--world-dim, #123a2a)"/>
-        </radialGradient>
-        <linearGradient id="rockGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" style="stop-color:#3a3350"/>
-          <stop offset="100%" style="stop-color:#17122B"/>
-        </linearGradient>
-      </defs>
-
-      <!-- גוף הסלע התחתון של האי -->
-      <path d="M 55 150 Q 40 230 110 260 Q 200 285 300 258 Q 365 232 345 150 Z"
-            fill="url(#rockGrad)"/>
-
-      <!-- מפל קטן זורם מהצד -->
-      <path class="island-waterfall" d="M 95 190 Q 88 240 78 295 L 108 295 Q 112 240 118 190 Z"
-            style="fill:var(--world-glow-2, #4A7CFF); opacity:.6;"/>
-
-      <!-- משטח הדשא העליון -->
-      <ellipse cx="200" cy="140" rx="170" ry="68" fill="url(#grassGrad)"/>
-
-      <!-- גבישים דקורטיביים -->
-      <polygon class="island-crystal c1" points="90,95 100,60 110,95 100,115"
-               style="fill:var(--world-glow, #4A7CFF); filter:drop-shadow(0 0 6px var(--world-glow, #4A7CFF));"/>
-      <polygon class="island-crystal c2" points="300,85 312,45 324,85 312,108"
-               style="fill:var(--world-glow-2, #2EE6D0); filter:drop-shadow(0 0 6px var(--world-glow-2, #2EE6D0));"/>
-      <polygon class="island-crystal c3" points="200,60 208,35 216,60 208,75"
-               style="fill:var(--world-glow, #4A7CFF); filter:drop-shadow(0 0 5px var(--world-glow, #4A7CFF));"/>
-
-      <!-- מסלול מפותל שהצמתים יושבים עליו -->
-      <path id="island-trail-path"
-            d="M 90 175 C 130 145, 120 110, 175 108 C 235 106, 220 150, 270 140 C 310 132, 300 95, 335 85"
-            fill="none" style="stroke:var(--world-glow-2, #2EE6D0);" stroke-width="4"
-            stroke-linecap="round" stroke-dasharray="2 10" opacity=".7"/>
-    </svg>`;
-}
-
 requireAuth(async (user) => {
   const allowed = await enforceTimeLimits(user.uid);
   if (!allowed) return;
@@ -81,26 +37,25 @@ requireAuth(async (user) => {
     return;
   }
 
-  stageEl.innerHTML = `<div class="island-stage" id="island-stage">${buildIslandSVG()}<div class="island-nodes" id="island-nodes"></div></div>`;
+  stageEl.innerHTML = `
+    <div class="island-stage">
+      <img class="island-bg" src="assets/floating-island.png" alt="האי של ${world.title}">
+      <div class="island-nodes" id="island-nodes"></div>
+    </div>`;
 
-  const pathEl = document.getElementById('island-stage').querySelector('#island-trail-path');
-  const totalLen = pathEl.getTotalLength();
-  const n = worldLessons.length;
+  const nodesEl = document.getElementById('island-nodes');
+  const slots = pickMarkerSlots(worldLessons.length);
 
   let previousDone = true;
-  let currentPoint = null;
-  const nodesEl = document.getElementById('island-nodes');
+  let currentSlot = null;
+  const n = worldLessons.length;
 
   worldLessons.forEach((lesson, idx) => {
-    const t = n === 1 ? 1 : idx / (n - 1);
-    const pt = pathEl.getPointAtLength(t * totalLen);
-    const leftPct = (pt.x / 400) * 100;
-    const topPct = (pt.y / 300) * 100;
-
+    const slot = slots[idx];
     const done = !!progress[lesson.id];
     const unlocked = previousDone;
     const isBoss = idx === n - 1;
-    if (unlocked && !done && !currentPoint) currentPoint = { leftPct, topPct };
+    if (unlocked && !done && !currentSlot) currentSlot = slot;
     previousDone = done;
 
     const classes = ['island-node-btn'];
@@ -109,35 +64,28 @@ requireAuth(async (user) => {
     else if (!unlocked) classes.push('locked');
     else classes.push('current');
 
-    const icon = done ? '✅' : (unlocked ? (isBoss ? '💀' : idx + 1) : '🔒');
     const label = isBoss ? (world.bossTitle || 'בוס') : lesson.title;
     const tag = unlocked ? 'a' : 'span';
 
     const btn = document.createElement(tag);
     btn.className = classes.join(' ');
-    btn.style.left = leftPct + '%';
-    btn.style.top = topPct + '%';
+    btn.style.left = slot.x + '%';
+    btn.style.top = slot.y + '%';
     if (unlocked) btn.setAttribute('href', `lesson.html?id=${lesson.id}`);
-    btn.innerHTML = `${icon}<span class="island-node-label">${label}</span>`;
+    btn.innerHTML = `<span class="island-node-label">${label}</span>`;
     nodesEl.appendChild(btn);
   });
 
-  // אם הכל הושלם, שמים את האווטאר על הצומת האחרון
-  if (!currentPoint && worldLessons.length) {
-    const t = 1;
-    const pt = pathEl.getPointAtLength(t * totalLen);
-    currentPoint = { leftPct: (pt.x / 400) * 100, topPct: (pt.y / 300) * 100 };
-  }
+  // אם הכל הושלם, שמים את האווטאר על הצומת האחרון (שלב הבוס)
+  if (!currentSlot) currentSlot = slots[slots.length - 1];
 
-  if (currentPoint) {
-    const marker = document.createElement('img');
-    marker.src = 'assets/maccia-mascot.svg';
-    marker.className = 'island-avatar-token';
-    marker.alt = 'המיקום שלי';
-    marker.style.left = currentPoint.leftPct + '%';
-    marker.style.top = currentPoint.topPct + '%';
-    nodesEl.appendChild(marker);
-  }
+  const marker = document.createElement('img');
+  marker.src = 'assets/maccia-mascot.svg';
+  marker.className = 'island-avatar-token';
+  marker.alt = 'המיקום שלי';
+  marker.style.left = currentSlot.x + '%';
+  marker.style.top = currentSlot.y + '%';
+  nodesEl.appendChild(marker);
 });
 
 function setupArrows(allLessons, progress) {
